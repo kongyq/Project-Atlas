@@ -7,6 +7,8 @@ import opennlp.tools.parser.Parser;
 import opennlp.tools.parser.ParserFactory;
 import opennlp.tools.parser.ParserModel;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -18,6 +20,9 @@ public class NLPParserOp implements ParserOp<Parse>{
         this.parser = null;
     }
 
+    public NLPParserOp(File modelFile) throws IOException {
+        this(new ParserModel(modelFile));
+    }
     public NLPParserOp(ParserModel parserModel){
         this.parser = ParserFactory.create(parserModel);
     }

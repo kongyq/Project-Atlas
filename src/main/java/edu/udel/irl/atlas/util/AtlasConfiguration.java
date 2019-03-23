@@ -94,4 +94,14 @@ public class AtlasConfiguration {
 
     public String getStopwordsFolder(){return this.config.getString("stopwords.path");}
 
+
+    public double getSimilarityThreshold(){return this.config.getDouble("synset.similarity.threshold");}
+
+    public String getSynsetComparatorName(){return this.config.getString("synset.comparator.name");}
+
+    public String getNasariVectorType(){return this.config.getString("nasari.vector.type");}
+
+    public String getNasariVectorFile(){return this.config.getString(getNasariVectorType() + ".nasari.vectorFile");}
+
+    public boolean isLexicalModelCompressed(){return this.config.getBoolean("lexical.model.compress");}
 }

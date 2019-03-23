@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 public final class AtlasAnalyzer extends StopwordAnalyzerBase {
     private static final AtlasConfiguration CONFIG = AtlasConfiguration.getInstance();
     private static final String MODELS_FOLDER = CONFIG.getModelFolder();
+    private static final String MAPPER_FOLDER = CONFIG.getPOSMapperFolder();
     private NLPTokenizerOp tokenizerOp;
     private NLPSentenceDetectorOp sentenceDetectorOp;
     private NLPLemmatizerOp lemmatizerOp;
@@ -42,14 +43,14 @@ public final class AtlasAnalyzer extends StopwordAnalyzerBase {
 
             //initial ParserOp and SynsetOp classes by using reflection.
             Class parserClass = Class.forName(this.getClass().getPackage().getName() + CONFIG.getParserName());
-            Constructor parserConstructor = parserClass.getConstructor(UPOSMapper.class);
-            this.parserOp = (ParserOp) parserConstructor.newInstance(new UPOSMapper(
-                    new File(MODELS_FOLDER, CONFIG.getPOSMapperFile())));
+            Constructor parserConstructor = parserClass.getConstructor(File.class);
+            this.parserOp = (ParserOp) parserConstructor.newInstance(
+                    new File(MODELS_FOLDER, CONFIG.getPOSMapperFile()));
 
             Class synsetClass = Class.forName(this.getClass().getPackage().getName() + CONFIG.getSynsetDictName());
             Constructor synsetConstructor = synsetClass.getConstructor(UPOSMapper.class);
             this.synsetOp = (SynsetOp) synsetConstructor.newInstance(new UPOSMapper(
-                    new File(MODELS_FOLDER, CONFIG.getPOSMapperFile())));
+                    new File(MAPPER_FOLDER, CONFIG.getPOSMapperFile())));
         } catch (IOException | InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException | ClassNotFoundException e) {
             e.printStackTrace();
         }

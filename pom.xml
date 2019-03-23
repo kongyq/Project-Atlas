@@ -44,6 +44,20 @@
       <version>r32</version>
     </dependency>
 
+    <dependency>
+      <groupId>it.unimi.dsi</groupId>
+      <artifactId>fastutil</artifactId>
+      <version>8.2.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>it.uniroma1.lcl.adw</groupId>
+      <artifactId>adw</artifactId>
+      <version>1.0.0-feb2015</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/adw.feb2015.jar</systemPath>
+    </dependency>
+
   </dependencies>
 
   <build>

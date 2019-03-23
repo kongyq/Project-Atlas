@@ -7,6 +7,7 @@ import edu.berkeley.nlp.syntax.Tree;
 import edu.berkeley.nlp.util.Numberer;
 import edu.udel.irl.atlas.util.ParsePayloadEncoder;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,6 +17,10 @@ public class BerkeleyParserOp implements ParserOp<Tree<String>>{
 
     public BerkeleyParserOp(){
         this.parser = null;
+    }
+
+    public BerkeleyParserOp(File modelFile){
+        this(ParserData.Load(modelFile.getName()));
     }
 
     public BerkeleyParserOp(ParserData parserData){
