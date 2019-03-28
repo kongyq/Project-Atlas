@@ -46,7 +46,7 @@ public class UPOSMapper {
     }
 
     public UPOSMapper(File mappingFile){
-        this(mappingFile.getName());
+        this(mappingFile.getAbsolutePath());
     }
 
     public UPOSMapper(InputStream input){

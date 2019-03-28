@@ -17,7 +17,7 @@ import java.io.IOException;
  *     A POS or parser filter and a lemma filter need to be performed before this filter.
  * </P>
  */
-public class SynsetFilter extends TokenFilter {
+public final class SynsetFilter extends TokenFilter {
 
     private final SynsetOp synsetOp;
     private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);

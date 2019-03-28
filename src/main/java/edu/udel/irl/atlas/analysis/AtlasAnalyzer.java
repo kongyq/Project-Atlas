@@ -39,15 +39,16 @@ public final class AtlasAnalyzer extends StopwordAnalyzerBase {
                     new File(MODELS_FOLDER, CONFIG.getSentenceModel())));
 
             this.lemmatizerOp = new NLPLemmatizerOp(new FileInputStream(
-                    new File(MODELS_FOLDER, CONFIG.getLemmatizerModel())), null);
+                    new File(MODELS_FOLDER, CONFIG.getLemmatizerDict())), null);
 
             //initial ParserOp and SynsetOp classes by using reflection.
-            Class parserClass = Class.forName(this.getClass().getPackage().getName() + CONFIG.getParserName());
+            Class parserClass = Class.forName("edu.udel.irl.atlas.parser." + CONFIG.getParserName());
+//            Class parserClass = Class.forName(this.getClass().getPackage().getName() + "." + CONFIG.getParserName());
             Constructor parserConstructor = parserClass.getConstructor(File.class);
             this.parserOp = (ParserOp) parserConstructor.newInstance(
-                    new File(MODELS_FOLDER, CONFIG.getPOSMapperFile()));
+                    new File(MODELS_FOLDER, CONFIG.getParserModel()));
 
-            Class synsetClass = Class.forName(this.getClass().getPackage().getName() + CONFIG.getSynsetDictName());
+            Class synsetClass = Class.forName("edu.udel.irl.atlas.babelnet." + CONFIG.getSynsetDictName());
             Constructor synsetConstructor = synsetClass.getConstructor(UPOSMapper.class);
             this.synsetOp = (SynsetOp) synsetConstructor.newInstance(new UPOSMapper(
                     new File(MAPPER_FOLDER, CONFIG.getPOSMapperFile())));

@@ -1,7 +1,9 @@
 package edu.udel.irl.atlas.search;
 
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.Query;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.spans.SpanQuery;
+import org.apache.lucene.search.spans.SpanWeight;
 
 import java.io.IOException;
 import java.util.Map;
@@ -12,24 +14,26 @@ import java.util.Objects;
  *
  * This will call wrapped query matches method and uses the return matchesIterator.
  */
-public class AtlasQuery extends Query {
+public class AtlasQuery extends SpanQuery {
+
 //    private final Map<String, String>
-    private final Query wrappedQuery;
+    private final SpanQuery wrappedSpanQuery;
+    private final Map queryMap;
 
-    public AtlasQuery(Query in){
-        this.wrappedQuery = in;
+    public AtlasQuery(SpanQuery in, Map inMap){
+        this.wrappedSpanQuery = in;
+        this.queryMap = inMap;
     }
 
-    public Query getWrappedQuery() {return wrappedQuery;}
-
-    @Override
-    public Query rewrite(IndexReader reader) throws IOException {
-        return new AtlasQuery(wrappedQuery.rewrite(reader));
+    public AtlasQuery(SpanQuery in){
+        this(in, new Int2ObjectOpenHashMap());
     }
+
+    public SpanQuery getWrappedQuery() {return wrappedSpanQuery;}
 
     @Override
     public String toString(String field) {
-        return "AtlasQuery(" + wrappedQuery.toString(field) + ")";
+        return "AtlasQuery(" + wrappedSpanQuery.toString(field) + ")";
     }
 
     @Override
@@ -37,13 +41,22 @@ public class AtlasQuery extends Query {
         if(this == obj) return true;
         if(obj == null || getClass() != obj.getClass()) return false;
         AtlasQuery that = (AtlasQuery) obj;
-        return Objects.equals(wrappedQuery, that.wrappedQuery);
+        return Objects.equals(wrappedSpanQuery, that.wrappedSpanQuery);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(wrappedQuery);
+        return Objects.hash(wrappedSpanQuery);
     }
 
 
+    @Override
+    public String getField() {
+        return null;
+    }
+
+    @Override
+    public SpanWeight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
+        return null;
+    }
 }

@@ -76,9 +76,9 @@ public class AtlasConfiguration {
 
     public String getParserName(){return this.config.getString("parser.name") + "ParserOp";}
 
-    public String getParserModel(){return this.config.getString(this.getParserName() + ".parser.model");}
+    public String getParserModel(){return this.config.getString(this.config.getString("parser.name") + ".parser.model");}
 
-    public String getLemmatizerModel(){return this.config.getString("lemmatizer.model");}
+    public String getLemmatizerDict(){return this.config.getString("lemmatizer.dict");}
 
     public String getSynsetDictName(){return this.config.getString("synsetDict.name") + "SynsetOp";}
 
@@ -96,6 +96,8 @@ public class AtlasConfiguration {
 
 
     public double getSimilarityThreshold(){return this.config.getDouble("synset.similarity.threshold");}
+
+    public boolean isExpansionCrossPOS(){return this.config.getBoolean("synset.expansion.crossPOS");}
 
     public String getSynsetComparatorName(){return this.config.getString("synset.comparator.name");}
 

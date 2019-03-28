@@ -38,7 +38,7 @@ import java.util.List;
  *    </P>
  * </P>
  */
-public class ParsePayloadFilter extends TokenFilter {
+public final class ParsePayloadFilter extends TokenFilter {
 
     private final ParserOp parserOp;
 
@@ -92,8 +92,9 @@ public class ParsePayloadFilter extends TokenFilter {
 
         clearAttributes();
         sentenceTokenAttrs.get(tokenNum).copyTo(this);
-        typeAtt.setType(poses[tokenNum++]);     //tags the token
+        typeAtt.setType(poses[tokenNum]);     //tags the token
         payloadAtt.setPayload(new BytesRef(codes.get(tokenNum)));       //encode the token
+        tokenNum++;
         return true;
     }
 
