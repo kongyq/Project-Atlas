@@ -1,6 +1,8 @@
 package edu.udel.irl.atlas.search;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import org.apache.lucene.queries.payloads.PayloadFunction;
+import org.apache.lucene.queries.payloads.PayloadScoreQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.SpanWeight;
@@ -14,49 +16,55 @@ import java.util.Objects;
  *
  * This will call wrapped query matches method and uses the return matchesIterator.
  */
-public class AtlasQuery extends SpanQuery {
+public class AtlasQuery extends PayloadScoreQuery {
 
-//    private final Map<String, String>
     private final SpanQuery wrappedSpanQuery;
     private final Map queryMap;
+    private PayloadFunction function;
 
-    public AtlasQuery(SpanQuery in, Map inMap){
+    public AtlasQuery(SpanQuery in, PayloadFunction function, Map inMap){
+        super(in, function, null,false);
         this.wrappedSpanQuery = in;
+        this.function = function;
         this.queryMap = inMap;
     }
 
-    public AtlasQuery(SpanQuery in){
-        this(in, new Int2ObjectOpenHashMap());
-    }
-
-    public SpanQuery getWrappedQuery() {return wrappedSpanQuery;}
-
-    @Override
-    public String toString(String field) {
-        return "AtlasQuery(" + wrappedSpanQuery.toString(field) + ")";
+    public AtlasQuery(SpanQuery in, PayloadFunction function){
+        this(in, function, new Int2ObjectOpenHashMap());
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if(this == obj) return true;
-        if(obj == null || getClass() != obj.getClass()) return false;
-        AtlasQuery that = (AtlasQuery) obj;
-        return Objects.equals(wrappedSpanQuery, that.wrappedSpanQuery);
+    public String toString(String field){
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("AtlasQuery(");
+        buffer.append(wrappedSpanQuery.toString(field));
+        buffer.append(", function: ");
+        buffer.append(function.getClass().getSimpleName());
+        buffer.append(")");
+        return buffer.toString();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return sameClassAs(other) &&
+                equalsTo(getClass().cast(other));
+    }
+
+    private boolean equalsTo(AtlasQuery other) {
+        return wrappedSpanQuery.equals(other.wrappedSpanQuery) &&
+                function.equals(other.function) && (queryMap == other.queryMap);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(wrappedSpanQuery);
-    }
-
-
-    @Override
-    public String getField() {
-        return null;
+        return Objects.hash(wrappedSpanQuery, function, queryMap);
     }
 
     @Override
     public SpanWeight createWeight(IndexSearcher searcher, boolean needsScores, float boost) throws IOException {
-        return null;
+        SpanWeight innerWeight = wrappedSpanQuery.createWeight(searcher, needsScores, boost);
+        if (!needsScores)
+            return innerWeight;
+        return new AtlasWeight(this, searcher, innerWeight, boost);
     }
 }
