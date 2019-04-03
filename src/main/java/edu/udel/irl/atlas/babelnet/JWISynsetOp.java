@@ -92,7 +92,8 @@ public class JWISynsetOp implements SynsetOp {
                 .get()
                 .getSynsetID()
                 .toString()
-                .substring(4);
+                .substring(4)
+                .toLowerCase();
     }
 
     public void close(){

@@ -1,5 +1,6 @@
 package edu.udel.irl.atlas.babelnet;
 
+import edu.udel.irl.atlas.util.AtlasConfiguration;
 import edu.udel.irl.atlas.util.UPOSMapper;
 import it.uniroma1.lcl.jlt.util.Language;
 import org.junit.Test;
@@ -7,7 +8,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class BNWNSynsetOpTest {
-    private SynsetOp synsetOp = new BNWNSynsetOp(new UPOSMapper("en-bn"));
+    private SynsetOp synsetOp = new BNWNSynsetOp(new UPOSMapper(AtlasConfiguration.getInstance().getPOSMapperFolder() + "/en-bn.map"));
     @Test
     public void synsetToString() {
         System.out.println(synsetOp.getSynsetId("apple", "NN"));

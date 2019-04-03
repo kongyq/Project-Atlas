@@ -1,6 +1,7 @@
 package edu.udel.irl.atlas.babelnet;
 
 import com.babelscape.util.UniversalPOS;
+import edu.udel.irl.atlas.util.AtlasConfiguration;
 import edu.udel.irl.atlas.util.UPOSMapper;
 import it.uniroma1.lcl.jlt.util.Language;
 import org.junit.Test;
@@ -9,7 +10,7 @@ import static org.junit.Assert.*;
 
 public class BNSynsetOpTest {
 
-    private SynsetOp bnSynsetOp = new BNSynsetOp(new UPOSMapper("en-bn"));
+    private SynsetOp bnSynsetOp = new BNSynsetOp(new UPOSMapper(AtlasConfiguration.getInstance().getPOSMapperFolder() + "/en-bn.map"));
     public BNSynsetOpTest(){
 
     }

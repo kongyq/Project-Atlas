@@ -5,6 +5,7 @@ import org.apache.lucene.search.Explanation;
 import org.apache.lucene.util.BytesRef;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * An abstract class that defines a way for AtlasQuery instances to calculate
@@ -23,10 +24,10 @@ public abstract class ScoreFunction {
      * @param payloadList The list of payload of matching terms
      * @return The new current score
      */
-    public abstract float docScore(int docId, String field, List<Term> termList, List<BytesRef> payloadList);
+    public abstract float docScore(int docId, String field, List<Term> termList, List<BytesRef> payloadList, Map<Term, ? extends Map<BytesRef, Float>> queryMap);
 
-    public Explanation explain(int docId, String field, List<Term> termList, List<BytesRef> payloadList) {
-        return Explanation.match(docScore(docId, field, termList, payloadList),
+    public Explanation explain(int docId, String field, List<Term> termList, List<BytesRef> payloadList, Map<Term, ? extends Map<BytesRef, Float>> queryMap) {
+        return Explanation.match(docScore(docId, field, termList, payloadList, queryMap),
                 getClass().getSimpleName() + ".docScore()");
     }
 

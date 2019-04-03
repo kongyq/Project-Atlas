@@ -1,5 +1,7 @@
 package edu.udel.irl.atlas.search;
 
+import edu.udel.irl.atlas.search.function.AtlasScoreFunction;
+import edu.udel.irl.atlas.search.function.ScoreFunction;
 import edu.udel.irl.atlas.synsim.ADWSynsetSimilarity;
 import edu.udel.irl.atlas.synsim.SynsetSimilarity;
 import edu.udel.irl.atlas.util.AtlasConfiguration;
@@ -29,6 +31,7 @@ public class AtlasQueryParser{
 
     private final Analyzer analyzer;
     private final String field;
+    private final ScoreFunction function;
 
     private final List<String> synsetsInIndex;
 
@@ -39,8 +42,18 @@ public class AtlasQueryParser{
      *     {@code Map<SimilarTerm, Map<Payload, Similarity>>}
      * </P>
      */
-    private Object2ObjectMap<Term, Object2DoubleOpenHashMap<BytesRef>> queryMap;
+    private Object2ObjectMap<Term, Object2FloatMap<BytesRef>> queryMap;
 
+    /**
+     * Create a {@code AtlasQuery} parser by using default {@code AtlasScoreFunction}.
+     * @param field the field for query terms
+     * @param analyzer the analyzer used for parsing query text
+     * @param reader the IndexReader
+     * @throws IOException if the index cannot be opened
+     */
+    public AtlasQueryParser(String field, Analyzer analyzer, IndexReader reader) throws IOException {
+        this(field, analyzer, reader, new AtlasScoreFunction());
+    }
     /**
      * Create a {@code AtlasQuery} parser.
      * @param field the default field for query terms
@@ -48,11 +61,11 @@ public class AtlasQueryParser{
      * @param reader used to find all similar terms of query terms in the index
      * @throws IOException if the index cannot be opened
      */
-    public AtlasQueryParser(String field, Analyzer analyzer, IndexReader reader) throws IOException {
+    public AtlasQueryParser(String field, Analyzer analyzer, IndexReader reader, ScoreFunction function) throws IOException {
 //        assert analyzer instanceof AtlasAnalyzer;
         this.field = Objects.requireNonNull(field);
         this.analyzer = Objects.requireNonNull(analyzer);
-
+        this.function = function;
         // Add all synsets of the index into synsetList
         Terms terms = MultiFields.getTerms(Objects.requireNonNull(reader), field);
         this.synsetsInIndex = new ArrayList<>((int) terms.size());
@@ -72,7 +85,7 @@ public class AtlasQueryParser{
         TokenStream tokenStream = analyzer.tokenStream(field, queryText);
         atlazing(tokenStream, crossAllPOS);
 
-        return createAtlasQuery(createSpanOrQuery(field, queryMap.keySet()), queryMap);
+        return new AtlasQuery(createSpanOrQuery(field, queryMap.keySet()), function, queryMap);
     }
 
     /**
@@ -82,22 +95,12 @@ public class AtlasQueryParser{
      * @return a {@code SpanOrQuery}
      */
     public SpanOrQuery createSpanOrQuery(String field, Set<Term> terms){
-        assert !terms.isEmpty();
+        assert !terms.isEmpty() : "CreateSpanOrQuery: no Terms!";
         List<SpanTermQuery> spanTermQueries = new ArrayList<>(terms.size());
         for(Term term: terms){
             spanTermQueries.add(new SpanTermQuery(term));
         }
         return new SpanOrQuery(spanTermQueries.toArray(new SpanTermQuery[0]));
-    }
-
-    /***
-     * Create a AtlasQuery from a span query and a query map
-     * @param in {@code SpanQuery}
-     * @param queryMap the query map for the span query
-     * @return a {@code AtlasQuery}
-     */
-    public AtlasQuery createAtlasQuery(SpanQuery in, Map queryMap){
-        return new AtlasQuery(in, queryMap);
     }
 
     /**
@@ -107,7 +110,8 @@ public class AtlasQueryParser{
      * @throws IOException if the {@link TokenStream} fail to read.
      */
     private void atlazing(TokenStream queryStream, boolean crossAllPOS) throws IOException {
-        assert queryStream.hasAttribute(CharTermAttribute.class) && queryStream.hasAttribute(PayloadAttribute.class);
+        assert queryStream.hasAttribute(CharTermAttribute.class) && queryStream.hasAttribute(PayloadAttribute.class)
+                :"atlazing failure: miss char or payload Attribute!";
 
         CharTermAttribute termAtt = queryStream.getAttribute(CharTermAttribute.class);
         PayloadAttribute payloadAtt = queryStream.getAttribute(PayloadAttribute.class);
@@ -123,10 +127,10 @@ public class AtlasQueryParser{
             queryPayloads.add(payloadAtt.getPayload());
             queryTokens.add(termAtt.toString());
         }
-        assert queryPayloads.size() == queryTokens.size();
+        assert queryPayloads.size() == queryTokens.size():"atlazing failure: payload size does not match token size!";
 
         for(String synset: synsetsInIndex){
-            Object2DoubleOpenHashMap<BytesRef> payloadSimMap = new Object2DoubleOpenHashMap<>();
+            Object2FloatOpenHashMap<BytesRef> payloadSimMap = new Object2FloatOpenHashMap<>();
             for(int i = 0; i < queryTokens.size(); i ++){
                 String token = queryTokens.get(i);
 
@@ -135,7 +139,7 @@ public class AtlasQueryParser{
                     continue;
                 }
 
-                double similarity = synsetSimilarity.compare(token, synset);
+                float similarity = (float) synsetSimilarity.compare(token, synset);
                 if(similarity >= THRESHOLD){
                     payloadSimMap.put(queryPayloads.get(i), similarity);
                 }
@@ -144,6 +148,7 @@ public class AtlasQueryParser{
                 queryMap.put(new Term(field, synset), payloadSimMap);
             }
         }
-        assert queryMap.size() >= queryTokens.size();
+        assert queryMap.size() >= queryTokens.size()
+                : "atlazing failure: queryMap size should be larger or equal to query tokens";
     }
 }

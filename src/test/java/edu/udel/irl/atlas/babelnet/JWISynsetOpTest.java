@@ -1,5 +1,6 @@
 package edu.udel.irl.atlas.babelnet;
 
+import edu.udel.irl.atlas.util.AtlasConfiguration;
 import edu.udel.irl.atlas.util.UPOSMapper;
 import it.uniroma1.lcl.jlt.util.Language;
 import org.junit.Test;
@@ -11,7 +12,7 @@ import static org.junit.Assert.*;
 
 public class JWISynsetOpTest {
 
-    private SynsetOp synsetOp = new JWISynsetOp(new UPOSMapper("en-wn"));
+    private SynsetOp synsetOp = new JWISynsetOp(new UPOSMapper(AtlasConfiguration.getInstance().getPOSMapperFolder() + "/en-wn.map"));
 //            new File("/home/mike/Documents/Index/WordNet-3.0/dict"));
 
     public JWISynsetOpTest() throws IOException {

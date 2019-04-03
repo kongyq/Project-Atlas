@@ -22,6 +22,6 @@ public class ParsePayloadDecoderTest {
     public void getShortestPath() {
         parserOp.parseSent(this.sentence.split(" "));
         List<byte[]> codeList = parserOp.getCodeList();
-        System.out.println(ParsePayloadDecoder.getShortestPath(codeList.get(0), codeList.get(9)));
+        System.out.println(ParsePayloadDecoder.getShortestPath(codeList.get(0), codeList.get(1)));
     }
 }
