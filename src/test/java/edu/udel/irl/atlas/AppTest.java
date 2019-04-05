@@ -3,6 +3,8 @@ package edu.udel.irl.atlas;
 import static org.junit.Assert.assertTrue;
 
 import edu.udel.irl.atlas.analysis.AtlasAnalyzer;
+import edu.udel.irl.atlas.search.AtlasQuery;
+import edu.udel.irl.atlas.search.AtlasQueryParser;
 import edu.udel.irl.atlas.util.AtlasConfiguration;
 import edu.udel.irl.atlas.util.UPOSMapper;
 import org.apache.lucene.document.Document;
@@ -52,8 +54,9 @@ public class AppTest
 
         Document document1 = new Document();
         Document document2 = new Document();
-        document1.add(new TextField("text", "The quick brown fox jumps over the lazy dog.", Field.Store.YES));
-        document2.add(new TextField("text", "The swift red fox hops over the indolent dog.", Field.Store.YES));
+        document1.add(new TextField("text", "The quick brown P.F.Changs jumps, over the lazy dog.", Field.Store.YES));
+//        document2.add(new TextField("text", "A web spider waves on the white wall.", Field.Store.YES));
+        document2.add(new TextField("text", "The swift red fox hops, over the ruby dog.", Field.Store.YES));
         writer.addDocument(document1);
         writer.addDocument(document2);
         writer.close();
@@ -62,20 +65,27 @@ public class AppTest
     @Test
     public void mainTest() throws IOException, ParseException {
 //        this.createTestIndex();
+//        System.out.println("Done!!");
 //        SpanOrTermsBuilder
-        SpanOrQuery query = new SpanOrQuery(new SpanTermQuery(new Term("text", "02118333-N")),
+        IndexReader reader = DirectoryReader.open(directory);
+        AtlasQueryParser queryParser = new AtlasQueryParser("text", new AtlasAnalyzer(), reader);
+        SpanQuery query = queryParser.parse("P.F.Changs red dog");
+//
+//        SpanOrQuery query = new SpanOrQuery(new SpanTermQuery(new Term("text", "02118333-N")),
 //                new SpanTermQuery(new Term("text", "02084071-N")),
-                new SpanTermQuery(new Term("text", "02118333-N")),
-                new SpanTermQuery(new Term("text", "00294579-A")));
-        PayloadScoreQuery payloadScoreQuery = new PayloadScoreQuery(query, new SumPayloadFunction(), false);
+//                new SpanTermQuery(new Term("text", "02118333-N")),
+//                new SpanTermQuery(new Term("text", "00294579-A")));
+//        PayloadScoreQuery payloadScoreQuery = new PayloadScoreQuery(query, new SumPayloadFunction(), false);
 //        SpanOrQuery query = new SpanOrQuery(new SpanTermQuery(new Term("text", "fox")),
 //                new SpanTermQuery(new Term("text", "dog")),
 //                new SpanTermQuery(new Term("text", "00332332-A")));
 //        QueryParser parser = new QueryParser("text", new AtlasAnalyzer());
 //        Query query = parser.parse("indolent");
-        IndexReader reader = DirectoryReader.open(directory);
+
         IndexSearcher searcher =  new IndexSearcher(reader);
-        TopDocs docs = searcher.search(payloadScoreQuery, 10);
+//        TopDocs docs = searcher.search(payloadScoreQuery, 10);
+        TopDocs docs = searcher.search(query, 10);
+
         ScoreDoc[] hits = docs.scoreDocs;
 
 

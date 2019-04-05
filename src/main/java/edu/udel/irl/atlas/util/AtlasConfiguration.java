@@ -99,7 +99,7 @@ public class AtlasConfiguration {
 
     public boolean isExpansionCrossPOS(){return this.config.getBoolean("synset.expansion.crossPOS");}
 
-    public String getSynsetComparatorName(){return this.config.getString("synset.comparator.name");}
+    public String getSynsetComparatorName(){return this.config.getString("synset.comparator.name") + "SynsetSimilarity";}
 
     public String getNasariVectorType(){return this.config.getString("nasari.vector.type");}
 

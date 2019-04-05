@@ -37,4 +37,9 @@ public final class SynsetFilter extends TokenFilter {
         termAtt.setEmpty().append(synsetId);
         return true;
     }
+
+    @Override
+    public void reset() throws IOException {
+        super.reset();
+    }
 }

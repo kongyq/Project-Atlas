@@ -2,12 +2,12 @@ package edu.udel.irl.atlas.search;
 
 import edu.udel.irl.atlas.search.function.AtlasScoreFunction;
 import edu.udel.irl.atlas.search.function.ScoreFunction;
-import edu.udel.irl.atlas.synsim.ADWSynsetSimilarity;
 import edu.udel.irl.atlas.synsim.SynsetSimilarity;
 import edu.udel.irl.atlas.util.AtlasConfiguration;
 import it.unimi.dsi.fastutil.objects.*;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.CachingTokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
@@ -18,6 +18,7 @@ import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
@@ -28,6 +29,7 @@ import java.util.*;
 public class AtlasQueryParser{
     private final double THRESHOLD = AtlasConfiguration.getInstance().getSimilarityThreshold();
     private final boolean crossAllPOS = AtlasConfiguration.getInstance().isExpansionCrossPOS();
+    private final String synsetComparator = AtlasConfiguration.getInstance().getSynsetComparatorName();
 
     private final Analyzer analyzer;
     private final String field;
@@ -111,19 +113,22 @@ public class AtlasQueryParser{
      */
     private void atlazing(TokenStream queryStream, boolean crossAllPOS) throws IOException {
         assert queryStream.hasAttribute(CharTermAttribute.class) && queryStream.hasAttribute(PayloadAttribute.class)
-                :"atlazing failure: miss char or payload Attribute!";
+                :"atlazing failure: char or payload Attribute not found!";
 
-        CharTermAttribute termAtt = queryStream.getAttribute(CharTermAttribute.class);
-        PayloadAttribute payloadAtt = queryStream.getAttribute(PayloadAttribute.class);
+        CachingTokenFilter stream = new CachingTokenFilter(queryStream);
+
+        CharTermAttribute termAtt = stream.getAttribute(CharTermAttribute.class);
+        PayloadAttribute payloadAtt = stream.getAttribute(PayloadAttribute.class);
 
         queryMap = new Object2ObjectOpenHashMap<>();
-        //TODO: need to modify this varible to use configuration file.
-        SynsetSimilarity synsetSimilarity = ADWSynsetSimilarity.getInstance();
+        SynsetSimilarity synsetSimilarity = getSynsetComparator();
 
         // get query's payloads and terms
         List<BytesRef> queryPayloads = new ArrayList<>();
         List<String> queryTokens = new ArrayList<>();
-        while(queryStream.incrementToken()){
+
+        stream.reset();
+        while(stream.incrementToken()){
             queryPayloads.add(payloadAtt.getPayload());
             queryTokens.add(termAtt.toString());
         }
@@ -131,24 +136,52 @@ public class AtlasQueryParser{
 
         for(String synset: synsetsInIndex){
             Object2FloatOpenHashMap<BytesRef> payloadSimMap = new Object2FloatOpenHashMap<>();
+
+            System.out.println(synset + " -> ");
             for(int i = 0; i < queryTokens.size(); i ++){
                 String token = queryTokens.get(i);
 
                 // if the expansion only for same type of POS, check synset and token POS.
                 if(!crossAllPOS && token.charAt(token.length()-1) != synset.charAt(synset.length()-1)){
+                    System.out.println(token + " skipped!");
                     continue;
                 }
 
-                float similarity = (float) synsetSimilarity.compare(token, synset);
-                if(similarity >= THRESHOLD){
-                    payloadSimMap.put(queryPayloads.get(i), similarity);
+                if(token.equals(synset)){
+                    payloadSimMap.put(queryPayloads.get(i), 1f);
+                }else{
+                    float similarity = (float) synsetSimilarity.compare(token, synset);
+                    System.out.print(token + " " + similarity);
+                    if(similarity >= THRESHOLD){
+                        System.out.print(":" + queryPayloads.get(i));
+                        payloadSimMap.put(queryPayloads.get(i), similarity);
+                    }
+//                System.out.println();
                 }
             }
             if (!payloadSimMap.isEmpty()) {
                 queryMap.put(new Term(field, synset), payloadSimMap);
             }
         }
-        assert queryMap.size() >= queryTokens.size()
-                : "atlazing failure: queryMap size should be larger or equal to query tokens";
+
+//        System.out.println(queryMap.size());
+//        System.out.println(queryTokens.size());
+
+//        assert queryMap.size() >= queryTokens.size()
+//                : "atlazing failure: queryMap size should be larger or equal to query tokens";
+    }
+
+    /**
+     * Use reflection to get synset comparator based on the configuration file
+     * @return a SynsetSimilarity instance
+     */
+    private SynsetSimilarity getSynsetComparator(){
+        try {
+            Class syncompClass = Class.forName("edu.udel.irl.atlas.synsim." + synsetComparator);
+            return (SynsetSimilarity) syncompClass.getDeclaredMethod("getInstance").invoke(null, null);
+        } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

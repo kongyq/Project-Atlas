@@ -13,6 +13,12 @@ public class AtlasScoreFunction extends ScoreFunction{
 
     @Override
     public float docScore(int docId, String field, List<Term> termList, List<BytesRef> payloadList, Map<Term, ? extends Map<BytesRef, Float>> queryMap) {
+
+        cycles.clear();
+//        termList.forEach(System.out::println);
+//        payloadList.forEach(System.out::println);
+
+        System.out.println("Call docScore func!! inside");
         int matchingLength = termList.size();
         int totalEdges = termList.stream().map(queryMap::get).mapToInt(Map::size).sum();
         // no cycle formed
@@ -39,6 +45,7 @@ public class AtlasScoreFunction extends ScoreFunction{
 
         float finalScore = 0f;
         for(int i = 0; i < barList.size()-1; i ++){
+            System.out.println("Call cycleScore func!!");
             finalScore += cycleScore(barList.get(i), barList.get(i + 1));
         }
         return finalScore;
@@ -54,7 +61,7 @@ public class AtlasScoreFunction extends ScoreFunction{
         // cycle coefficient of the intra-tree weights | |
         float sai = Math.min(first.getValue(), second.getValue());
         // distance between two terminals in document arc /\
-        int distInDocArc = ParsePayloadDecoder.getShortestPath(first.getKey()[0], second.getKey()[0]);
+        int distInDocArc = ParsePayloadDecoder.getShortestPath(decodeBytesRef(first.getKey()[0]), decodeBytesRef(second.getKey()[0]));
         if(distInDocArc == 0) distInDocArc = 1;
         // distance between two terminals in query arc \/
         int distInQueryArc = ParsePayloadDecoder.getShortestPath(first.getKey()[1], second.getKey()[1]);
@@ -74,8 +81,18 @@ public class AtlasScoreFunction extends ScoreFunction{
         return sai * harmonicMean;
     }
 
+    /**
+     * decode the payload from BytesRef since the indexing procedure will reformat the payload with paddings.
+     * @param bytesRef BytesRef need to be reformat into byte[]
+     * @return byte[] contains payload
+     */
+    private static byte[] decodeBytesRef(BytesRef bytesRef){
+        return Arrays.copyOfRange(bytesRef.bytes, bytesRef.offset, bytesRef.offset + bytesRef.length);
+    }
+
     @Override
     public Explanation explain(int docId, String field, List<Term> termList, List<BytesRef> payloadList, Map<Term, ? extends Map<BytesRef, Float>> queryMap){
+        System.out.println("Call docScore func!");
         final float finalScore = docScore(docId, field, termList, payloadList, queryMap);
         return Explanation.match(finalScore, "AtlasScore, computed as sum of cycle scores", cycles);
     }

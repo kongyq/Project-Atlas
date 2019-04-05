@@ -82,6 +82,7 @@ public class JWISynsetOp implements SynsetOp {
         String simplePOS = uposMapper.convert(pos);
         if(simplePOS == null) return lemma;
         IIndexWord indexWord = this.dictionary.getIndexWord(lemma, POS.valueOf(simplePOS));
+        if(indexWord == null) return lemma;
         List<IWordID> wordIDS = indexWord.getWordIDs();
         if(wordIDS.isEmpty()) return lemma;
         return wordIDS

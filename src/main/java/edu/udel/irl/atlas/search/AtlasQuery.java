@@ -9,10 +9,7 @@ import org.apache.lucene.search.spans.*;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A Query class that uses a {@link ScoreFunction} to compute the socre of a wrapped SpanQuery.
@@ -180,8 +177,8 @@ public class AtlasQuery extends SpanQuery {
     private class PayloadSpans extends FilterSpans implements SpanCollector {
 
         // store term and payload of each matching.
-        public List<BytesRef> payloadList;
-        public List<Term> termList;
+        public List<BytesRef> payloadList = new ArrayList<>();
+        public List<Term> termList = new ArrayList<>();
 
         private PayloadSpans(Spans in) {
             super(in);
@@ -238,6 +235,7 @@ public class AtlasQuery extends SpanQuery {
 
         @Override
         protected float scoreCurrentDoc() throws IOException {
+            System.out.println("Call scoreCurrentDoc func!!!--");
             //This may be deprecated in the future if span score is needed no more.
             if (includeSpanScore)
                 return getSpanScore() * getPayloadScore();
