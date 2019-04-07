@@ -20,7 +20,7 @@ public class BerkeleyParserOp implements ParserOp<Tree<String>>{
     }
 
     public BerkeleyParserOp(File modelFile){
-        this(ParserData.Load(modelFile.getName()));
+        this(ParserData.Load(modelFile.getAbsolutePath()));
     }
 
     public BerkeleyParserOp(ParserData parserData){

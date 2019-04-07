@@ -66,6 +66,8 @@ public class AtlasConfiguration {
         return instance;
     }
 
+    //----------Index------------------------
+
     public String getResourceFolder(){return this.config.getString("atlas.resourceDir");}
 
     public String getModelFolder(){return this.config.getString("model.path");}
@@ -94,16 +96,31 @@ public class AtlasConfiguration {
 
     public String getStopwordsFolder(){return this.config.getString("stopwords.path");}
 
+    public boolean skipPunctuation(){return this.config.getBoolean("misc.punctuation.skip");}
 
-    public double getSimilarityThreshold(){return this.config.getDouble("synset.similarity.threshold");}
+    //----------Search-----------------------
+
+    public double getSimilarityThreshold(){return this.config.getDouble(getSynsetComparatorName().toLowerCase() + ".synset.similarity.threshold");}
 
     public boolean isExpansionCrossPOS(){return this.config.getBoolean("synset.expansion.crossPOS");}
 
-    public String getSynsetComparatorName(){return this.config.getString("synset.comparator.name") + "SynsetSimilarity";}
+    private String getSynsetComparatorName(){return this.config.getString("synset.comparator.name");}
+
+    public String getSynsetComparatorClassName(){return getSynsetComparatorName() + "SynsetSimilarity";}
 
     public String getNasariVectorType(){return this.config.getString("nasari.vector.type");}
 
     public String getNasariVectorFile(){return this.config.getString(getNasariVectorType() + ".nasari.vectorFile");}
 
     public boolean isLexicalModelCompressed(){return this.config.getBoolean("lexical.model.compress");}
+
+    //----------Advance-----------------------
+
+    public boolean sortBarQueryPriority(){return this.config.getBoolean("queryArc.first");}
+
+    public float getHarmonicMeanExponent(){
+        return (this.config.getString("harmonicMean.exponent").equalsIgnoreCase("e")) ?
+                (float) Math.E : this.config.getFloat("harmonicMean.exponent");
+    }
+
 }

@@ -24,6 +24,7 @@ public final class AtlasAnalyzer extends StopwordAnalyzerBase {
     private static final AtlasConfiguration CONFIG = AtlasConfiguration.getInstance();
     private static final String MODELS_FOLDER = CONFIG.getModelFolder();
     private static final String MAPPER_FOLDER = CONFIG.getPOSMapperFolder();
+    private static final boolean skipPunctuation = CONFIG.skipPunctuation();
     private NLPTokenizerOp tokenizerOp;
     private NLPSentenceDetectorOp sentenceDetectorOp;
     private NLPLemmatizerOp lemmatizerOp;
@@ -43,7 +44,6 @@ public final class AtlasAnalyzer extends StopwordAnalyzerBase {
 
             //initial ParserOp and SynsetOp classes by using reflection.
             Class parserClass = Class.forName("edu.udel.irl.atlas.parser." + CONFIG.getParserName());
-//            Class parserClass = Class.forName(this.getClass().getPackage().getName() + "." + CONFIG.getParserName());
             Constructor parserConstructor = parserClass.getConstructor(File.class);
             this.parserOp = (ParserOp) parserConstructor.newInstance(
                     new File(MODELS_FOLDER, CONFIG.getParserModel()));
@@ -73,6 +73,7 @@ public final class AtlasAnalyzer extends StopwordAnalyzerBase {
                 }
             }
             target = new SynsetFilter(target, this.synsetOp);
+            if(skipPunctuation) target = new PunctuationFilter(target);
             return new TokenStreamComponents(source, target);
         } catch (IOException e) {
             e.printStackTrace();
@@ -84,6 +85,7 @@ public final class AtlasAnalyzer extends StopwordAnalyzerBase {
     protected TokenStream normalize(String fieldName, TokenStream in) {
         TokenStream target = new ParsePayloadFilter(in, this.parserOp);
         target = new OpenNLPLemmatizerFilter(target, this.lemmatizerOp);
-        return new SynsetFilter(target, this.synsetOp);
+        target = new SynsetFilter(target, this.synsetOp);
+        return (skipPunctuation) ? target : new PunctuationFilter(target);
     }
 }

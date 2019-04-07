@@ -54,9 +54,9 @@ public class AppTest
 
         Document document1 = new Document();
         Document document2 = new Document();
-        document1.add(new TextField("text", "The quick brown P.F.Changs jumps, over the lazy dog.", Field.Store.YES));
+        document1.add(new TextField("text", "The quick brown fox runs over the crimson dog.", Field.Store.YES));
 //        document2.add(new TextField("text", "A web spider waves on the white wall.", Field.Store.YES));
-        document2.add(new TextField("text", "The swift red fox hops, over the ruby dog.", Field.Store.YES));
+        document2.add(new TextField("text", "The swift red fox walks over the ruby dog.", Field.Store.YES));
         writer.addDocument(document1);
         writer.addDocument(document2);
         writer.close();
@@ -69,7 +69,7 @@ public class AppTest
 //        SpanOrTermsBuilder
         IndexReader reader = DirectoryReader.open(directory);
         AtlasQueryParser queryParser = new AtlasQueryParser("text", new AtlasAnalyzer(), reader);
-        SpanQuery query = queryParser.parse("P.F.Changs red dog");
+        SpanQuery query = queryParser.parse("dog");
 //
 //        SpanOrQuery query = new SpanOrQuery(new SpanTermQuery(new Term("text", "02118333-N")),
 //                new SpanTermQuery(new Term("text", "02084071-N")),

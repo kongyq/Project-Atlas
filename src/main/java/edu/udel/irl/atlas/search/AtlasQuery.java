@@ -235,7 +235,6 @@ public class AtlasQuery extends SpanQuery {
 
         @Override
         protected float scoreCurrentDoc() throws IOException {
-            System.out.println("Call scoreCurrentDoc func!!!--");
             //This may be deprecated in the future if span score is needed no more.
             if (includeSpanScore)
                 return getSpanScore() * getPayloadScore();

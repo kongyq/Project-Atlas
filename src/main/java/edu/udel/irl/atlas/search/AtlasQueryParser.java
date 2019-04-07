@@ -29,7 +29,7 @@ import java.util.*;
 public class AtlasQueryParser{
     private final double THRESHOLD = AtlasConfiguration.getInstance().getSimilarityThreshold();
     private final boolean crossAllPOS = AtlasConfiguration.getInstance().isExpansionCrossPOS();
-    private final String synsetComparator = AtlasConfiguration.getInstance().getSynsetComparatorName();
+    private final String synsetComparator = AtlasConfiguration.getInstance().getSynsetComparatorClassName();
 
     private final Analyzer analyzer;
     private final String field;
@@ -64,7 +64,6 @@ public class AtlasQueryParser{
      * @throws IOException if the index cannot be opened
      */
     public AtlasQueryParser(String field, Analyzer analyzer, IndexReader reader, ScoreFunction function) throws IOException {
-//        assert analyzer instanceof AtlasAnalyzer;
         this.field = Objects.requireNonNull(field);
         this.analyzer = Objects.requireNonNull(analyzer);
         this.function = function;
@@ -122,6 +121,7 @@ public class AtlasQueryParser{
 
         queryMap = new Object2ObjectOpenHashMap<>();
         SynsetSimilarity synsetSimilarity = getSynsetComparator();
+        assert synsetSimilarity != null;
 
         // get query's payloads and terms
         List<BytesRef> queryPayloads = new ArrayList<>();
@@ -137,13 +137,13 @@ public class AtlasQueryParser{
         for(String synset: synsetsInIndex){
             Object2FloatOpenHashMap<BytesRef> payloadSimMap = new Object2FloatOpenHashMap<>();
 
-            System.out.println(synset + " -> ");
+//            System.out.println(synset + " -> ");
             for(int i = 0; i < queryTokens.size(); i ++){
                 String token = queryTokens.get(i);
 
                 // if the expansion only for same type of POS, check synset and token POS.
                 if(!crossAllPOS && token.charAt(token.length()-1) != synset.charAt(synset.length()-1)){
-                    System.out.println(token + " skipped!");
+//                    System.out.println(token + " skipped!");
                     continue;
                 }
 
@@ -151,9 +151,9 @@ public class AtlasQueryParser{
                     payloadSimMap.put(queryPayloads.get(i), 1f);
                 }else{
                     float similarity = (float) synsetSimilarity.compare(token, synset);
-                    System.out.print(token + " " + similarity);
+//                    System.out.print(token + " " + similarity);
                     if(similarity >= THRESHOLD){
-                        System.out.print(":" + queryPayloads.get(i));
+//                        System.out.print(":" + queryPayloads.get(i));
                         payloadSimMap.put(queryPayloads.get(i), similarity);
                     }
 //                System.out.println();
@@ -178,7 +178,7 @@ public class AtlasQueryParser{
     private SynsetSimilarity getSynsetComparator(){
         try {
             Class syncompClass = Class.forName("edu.udel.irl.atlas.synsim." + synsetComparator);
-            return (SynsetSimilarity) syncompClass.getDeclaredMethod("getInstance").invoke(null, null);
+            return (SynsetSimilarity) syncompClass.getDeclaredMethod("getInstance").invoke(null);
         } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             e.printStackTrace();
             return null;

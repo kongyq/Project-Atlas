@@ -1,5 +1,6 @@
 package edu.udel.irl.atlas.search.function;
 
+import edu.udel.irl.atlas.util.AtlasConfiguration;
 import edu.udel.irl.atlas.util.ParsePayloadDecoder;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Explanation;
@@ -8,6 +9,9 @@ import org.apache.lucene.util.BytesRef;
 import java.util.*;
 
 public class AtlasScoreFunction extends ScoreFunction{
+
+    private final static boolean queryFirst = AtlasConfiguration.getInstance().sortBarQueryPriority();
+    private final static float EXPONENT = AtlasConfiguration.getInstance().getHarmonicMeanExponent();
 
     private List<Explanation> cycles = new ArrayList<>();
 
@@ -18,7 +22,7 @@ public class AtlasScoreFunction extends ScoreFunction{
 //        termList.forEach(System.out::println);
 //        payloadList.forEach(System.out::println);
 
-        System.out.println("Call docScore func!! inside");
+
         int matchingLength = termList.size();
         int totalEdges = termList.stream().map(queryMap::get).mapToInt(Map::size).sum();
         // no cycle formed
@@ -35,17 +39,16 @@ public class AtlasScoreFunction extends ScoreFunction{
                 bars.put(nodes, entry.getValue());
             }
         }
-        float score = 0f;
-        List<Map.Entry<BytesRef[], Float>> barList = new ArrayList<>(bars.entrySet());
-        boolean needsSort = true;
 
-        if(needsSort) {
-            barList.sort(Comparator.comparing(Map.Entry<BytesRef[], Float>::getValue).reversed());
-        }
+        List<Map.Entry<BytesRef[], Float>> barList = new ArrayList<>(bars.entrySet());
+        barList.sort(new BarComparator(queryFirst));
+
+//        for(Map.Entry<BytesRef[], Float> entry: barList){
+//            System.out.println(entry.getKey()[0] + "||" + entry.getKey()[1] + " : " + entry.getValue());
+//        }
 
         float finalScore = 0f;
         for(int i = 0; i < barList.size()-1; i ++){
-            System.out.println("Call cycleScore func!!");
             finalScore += cycleScore(barList.get(i), barList.get(i + 1));
         }
         return finalScore;
@@ -60,16 +63,21 @@ public class AtlasScoreFunction extends ScoreFunction{
     private float cycleScore(Map.Entry<BytesRef[], Float> first, Map.Entry<BytesRef[], Float> second){
         // cycle coefficient of the intra-tree weights | |
         float sai = Math.min(first.getValue(), second.getValue());
+//        System.out.println("   Sai -> " + sai);
+//        System.out.println("      1 -> " + first.getValue());
+//        System.out.println("      2 -> " + second.getValue());
         // distance between two terminals in document arc /\
         int distInDocArc = ParsePayloadDecoder.getShortestPath(decodeBytesRef(first.getKey()[0]), decodeBytesRef(second.getKey()[0]));
         if(distInDocArc == 0) distInDocArc = 1;
         // distance between two terminals in query arc \/
         int distInQueryArc = ParsePayloadDecoder.getShortestPath(first.getKey()[1], second.getKey()[1]);
         if(distInQueryArc == 0) distInQueryArc = 1;
-        // harmonic mean W_ci = exp(1 / distInDocArc ^ 3 + distInQueryArc ^ 3)
-        float harmonicMean = (float) Math.exp(1D / (Math.pow(distInDocArc, 3) + Math.pow(distInQueryArc, 3)));
-
-        cycles.add(Explanation.match(sai * harmonicMean, "Cycle score, computed as Sai * Exp(1 / (Arc_d ^ 3 + Arc_q ^ 3))",
+        // harmonic mean W_ci = exp(1 / distInDocArc ^ EXPONENT + distInQueryArc ^ EXPONENT)
+        float harmonicMean = (float) Math.exp(1d / (Math.pow(distInDocArc, EXPONENT) + Math.pow(distInQueryArc, EXPONENT)));
+//        System.out.println("   H -> " + harmonicMean);
+//        System.out.println("      Ad -> " + distInDocArc + ":" + first.getKey()[0].toString() + "|" + second.getKey()[0].toString());
+//        System.out.println("      Aq -> " + distInQueryArc + ":" + first.getKey()[1].toString() + "|" + second.getKey()[1].toString());
+        cycles.add(Explanation.match(sai * harmonicMean, "Cycle score, computed as Sai * Exp(1 / (Arc_d ^ "+ EXPONENT + " + Arc_q ^ " + EXPONENT + "))",
                 Explanation.match(sai, "coefficient Sai: min(bar1, bar2)",
                         Explanation.match(first.getValue(), "bar1"),
                         Explanation.match(second.getValue(), "bar2")),
@@ -77,7 +85,6 @@ public class AtlasScoreFunction extends ScoreFunction{
                         Explanation.match(distInDocArc, "Arc_d: distance of two terminals in doc arc"),
                         Explanation.match(distInQueryArc, "Arc_q: distance of two terminals in query arc"))));
 
-        // final cycle score W = sai * W_ci
         return sai * harmonicMean;
     }
 
@@ -92,7 +99,6 @@ public class AtlasScoreFunction extends ScoreFunction{
 
     @Override
     public Explanation explain(int docId, String field, List<Term> termList, List<BytesRef> payloadList, Map<Term, ? extends Map<BytesRef, Float>> queryMap){
-        System.out.println("Call docScore func!");
         final float finalScore = docScore(docId, field, termList, payloadList, queryMap);
         return Explanation.match(finalScore, "AtlasScore, computed as sum of cycle scores", cycles);
     }
@@ -111,5 +117,42 @@ public class AtlasScoreFunction extends ScoreFunction{
         if (obj == null)
             return false;
         return getClass() == obj.getClass();
+    }
+
+    /**
+     * A inner comparator class for comparing bars. First compare term similarity,
+     * then compare either query parse code order (default) or doc parse code order,
+     * then compare the left parse code order.
+     */
+    private class BarComparator implements Comparator<Map.Entry<BytesRef[], Float>> {
+
+        private final boolean queryFirst;
+
+        public BarComparator(boolean queryFirst){
+            this.queryFirst = queryFirst;
+        }
+
+        public BarComparator(){
+            this(true);
+        }
+
+        @Override
+        public int compare(Map.Entry<BytesRef[], Float> entryA, Map.Entry<BytesRef[], Float> entryB) {
+            int valueCompare = entryA.getValue().compareTo(entryB.getValue());
+            if(valueCompare == 0){
+                int priorCompare = (queryFirst) ?
+                        entryA.getKey()[1].compareTo(entryB.getKey()[1]) :
+                        entryA.getKey()[0].compareTo(entryB.getKey()[0]);
+                if(priorCompare == 0){
+                    return (queryFirst) ?
+                            entryA.getKey()[0].compareTo(entryB.getKey()[0]) :
+                            entryA.getKey()[1].compareTo(entryB.getKey()[1]);
+                }else{
+                    return priorCompare;
+                }
+            }else{
+                return -valueCompare;
+            }
+        }
     }
 }
