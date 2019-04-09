@@ -3,8 +3,7 @@ package edu.udel.irl.atlas;
 import static org.junit.Assert.assertTrue;
 
 import edu.udel.irl.atlas.analysis.AtlasAnalyzer;
-import edu.udel.irl.atlas.search.AtlasQuery;
-import edu.udel.irl.atlas.search.AtlasQueryParser;
+import edu.udel.irl.atlas.search.*;
 import edu.udel.irl.atlas.util.AtlasConfiguration;
 import edu.udel.irl.atlas.util.UPOSMapper;
 import org.apache.lucene.document.Document;
@@ -55,8 +54,10 @@ public class AppTest
         Document document1 = new Document();
         Document document2 = new Document();
         document1.add(new TextField("text", "The quick brown fox runs over the crimson dog.", Field.Store.YES));
+        document1.add(new TextField("docId", "document 1", Field.Store.YES));
 //        document2.add(new TextField("text", "A web spider waves on the white wall.", Field.Store.YES));
         document2.add(new TextField("text", "The swift red fox walks over the ruby dog.", Field.Store.YES));
+        document2.add(new TextField("docId", "document 2", Field.Store.YES));
         writer.addDocument(document1);
         writer.addDocument(document2);
         writer.close();
@@ -69,7 +70,7 @@ public class AppTest
 //        SpanOrTermsBuilder
         IndexReader reader = DirectoryReader.open(directory);
         AtlasQueryParser queryParser = new AtlasQueryParser("text", new AtlasAnalyzer(), reader);
-        SpanQuery query = queryParser.parse("dog");
+        SpanQuery query = queryParser.parse("red run dog");
 //
 //        SpanOrQuery query = new SpanOrQuery(new SpanTermQuery(new Term("text", "02118333-N")),
 //                new SpanTermQuery(new Term("text", "02084071-N")),
@@ -82,24 +83,51 @@ public class AppTest
 //        QueryParser parser = new QueryParser("text", new AtlasAnalyzer());
 //        Query query = parser.parse("indolent");
 
-        IndexSearcher searcher =  new IndexSearcher(reader);
+//        IndexSearcher searcher =  new IndexSearcher(reader);
 //        TopDocs docs = searcher.search(payloadScoreQuery, 10);
-        TopDocs docs = searcher.search(query, 10);
+//        TopDocs docs = searcher.search(query, 10);
+//
+//        ScoreDoc[] hits = docs.scoreDocs;
 
-        ScoreDoc[] hits = docs.scoreDocs;
+        AtlasIndexSearcher indexSearcher = new AtlasIndexSearcher(reader);
+
+        AtlasTopDocs topDocs = indexSearcher.search(query, 10);
+
+        AtlasScoreDoc[] hits = topDocs.scoreDocs;
 
 
         System.out.println("Found " + hits.length + " hits.");
         for(int i=0;i<hits.length;++i) {
-            int docId = hits[i].doc;
-            Document d = searcher.doc(docId);
-            System.out.println((i + 1) + ". " + d.get("text"));
+            String docId = hits[i].docId;
+            float score = hits[i].score;
+//            Document d = searcher.doc(docId);
+            System.out.println((i + 1) + ". " + docId + " score: " + score);
         }
-        for(ScoreDoc match: hits){
-            System.out.println(match.score);
-            Explanation explanation = searcher.explain(query, match.doc);
+
+        for(AtlasScoreDoc scoreDoc: hits){
+            Explanation explanation = indexSearcher.explain(query, scoreDoc);
             System.out.println(explanation.toString());
         }
+
+//        for(AtlasScoreDoc scoreDoc: hits){
+//            for(ScoreDoc match: scoreDoc.scoreDocs){
+//                System.out.println(match.score);
+//                Explanation explanation = indexSearcher.explain(query, match.doc);
+//                System.out.println(explanation.toString());
+//            }
+//        }
+
+        System.out.println("Found " + hits.length + " hits.");
+//        for(int i=0;i<hits.length;++i) {
+//            int docId = hits[i].doc;
+//            Document d = searcher.doc(docId);
+//            System.out.println((i + 1) + ". " + d.get("text"));
+//        }
+//        for(ScoreDoc match: hits){
+//            System.out.println(match.score);
+//            Explanation explanation = searcher.explain(query, match.doc);
+//            System.out.println(explanation.toString());
+//        }
     }
 
     @Test

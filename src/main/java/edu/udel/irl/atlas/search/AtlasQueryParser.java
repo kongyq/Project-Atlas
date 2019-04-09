@@ -1,5 +1,6 @@
 package edu.udel.irl.atlas.search;
 
+import edu.udel.irl.atlas.analysis.AtlasAnalyzer;
 import edu.udel.irl.atlas.search.function.AtlasScoreFunction;
 import edu.udel.irl.atlas.search.function.ScoreFunction;
 import edu.udel.irl.atlas.synsim.SynsetSimilarity;
@@ -45,6 +46,16 @@ public class AtlasQueryParser{
      * </P>
      */
     private Object2ObjectMap<Term, Object2FloatMap<BytesRef>> queryMap;
+
+    /**
+     * Create a {@code AtlasQuery} parser by using default {@code AtlasAnalyzer and AtlasScoreFunction}
+     * @param field the field for query terms
+     * @param reader the IndexReader
+     * @throws IOException if the index cannot be opened
+     */
+    public AtlasQueryParser(String field, IndexReader reader) throws IOException {
+        this(field, new AtlasAnalyzer(), reader, new AtlasScoreFunction());
+    }
 
     /**
      * Create a {@code AtlasQuery} parser by using default {@code AtlasScoreFunction}.

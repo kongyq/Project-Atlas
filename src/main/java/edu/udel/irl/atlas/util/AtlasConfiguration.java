@@ -100,7 +100,7 @@ public class AtlasConfiguration {
 
     //----------Search-----------------------
 
-    public double getSimilarityThreshold(){return this.config.getDouble(getSynsetComparatorName().toLowerCase() + ".synset.similarity.threshold");}
+    public double getSimilarityThreshold(){return this.config.getDouble(getSynsetComparatorName() + ".synset.similarity.threshold");}
 
     public boolean isExpansionCrossPOS(){return this.config.getBoolean("synset.expansion.crossPOS");}
 
@@ -123,4 +123,5 @@ public class AtlasConfiguration {
                 (float) Math.E : this.config.getFloat("harmonicMean.exponent");
     }
 
+    public String getDocIdField(){return this.config.getString("docId.field");}
 }
