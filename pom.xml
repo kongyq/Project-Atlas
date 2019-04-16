@@ -33,6 +33,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-benchmark</artifactId>
+      <version>7.6.0</version>
+    </dependency>
+
+    <dependency>
       <groupId>it.uniroma1.lcl.babelnet</groupId>
       <artifactId>babelnet-api</artifactId>
       <version>4.0</version>

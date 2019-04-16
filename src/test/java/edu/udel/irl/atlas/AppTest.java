@@ -71,6 +71,7 @@ public class AppTest
         IndexReader reader = DirectoryReader.open(directory);
         AtlasQueryParser queryParser = new AtlasQueryParser("text", new AtlasAnalyzer(), reader);
         SpanQuery query = queryParser.parse("red run dog");
+        SpanBoostQuery boostQuery = new SpanBoostQuery(query, 2.0f);
 //
 //        SpanOrQuery query = new SpanOrQuery(new SpanTermQuery(new Term("text", "02118333-N")),
 //                new SpanTermQuery(new Term("text", "02084071-N")),
@@ -91,7 +92,7 @@ public class AppTest
 
         AtlasIndexSearcher indexSearcher = new AtlasIndexSearcher(reader);
 
-        AtlasTopDocs topDocs = indexSearcher.search(query, 10);
+        AtlasTopDocs topDocs = indexSearcher.search(boostQuery, 10);
 
         AtlasScoreDoc[] hits = topDocs.scoreDocs;
 

@@ -116,6 +116,10 @@ public class AtlasConfiguration {
 
     //----------Advance-----------------------
 
+    public String getIndexDocIdField(){return this.config.getString("documentID.field");}
+
+    public String getIndexBodyField(){return this.config.getString("context.field");}
+
     public boolean sortBarQueryPriority(){return this.config.getBoolean("queryArc.first");}
 
     public float getHarmonicMeanExponent(){

@@ -76,13 +76,25 @@ public class AtlasIndexSearcher extends IndexSearcher{
         this(context, null);
     }
 
+    /**
+     * Find the top <code>n</code>
+     * hits for an <code>AtlasQuery</code>
+     * @param query an AtlasQuery
+     * @param n top n hit
+     * @return an AtlasTopDocs
+     * @throws IOException if the index cannot be read
+     */
+    public AtlasTopDocs search(SpanQuery query, int n) throws IOException {
+        return search(query, n, this.docIdField);
+    }
+
     /** Finds the top <code>n</code>
      * hits for a <code>AtlasQuery</code>.
      *
      * @throws BooleanQuery.TooManyClauses If a query would exceed
      *         {@link BooleanQuery#getMaxClauseCount()} clauses.
      */
-    public AtlasTopDocs search(SpanQuery query, int n) throws IOException {
+    public AtlasTopDocs search(SpanQuery query, int n, String docIdField) throws IOException {
         // retrieve all sentences in the index.
         TopDocs allSents = super.search(query, totalSents);
         doc2ScoreMap = new Object2ObjectOpenHashMap<>();

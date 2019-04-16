@@ -20,6 +20,6 @@ public class PunctuationFilter extends FilteringTokenFilter {
 
     @Override
     protected boolean accept(){
-        return !Pattern.matches("\\p{Punct}", termAtt.subSequence(0, termAtt.length()));
+        return !Pattern.matches("[\\p{Punct}]+", termAtt.subSequence(0, termAtt.length()));
     }
 }
