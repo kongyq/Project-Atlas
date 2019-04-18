@@ -30,7 +30,7 @@ public class ParsePayloadEncoderTest {
         parserOp.parseSent("The quick brown fox jumps over the lazy dog .".split(" "));
         Parse parses = parserOp.getParse();
 
-        List<byte[]> ans = ParsePayloadEncoder.encode(parses);
+        List<byte[]> ans = ParsePayloadEncoder.encode(parses, (short) 2);
         for(byte[] codes: ans){
             for(byte code: codes) System.out.print(code);
             System.out.println();
@@ -53,5 +53,10 @@ public class ParsePayloadEncoderTest {
 
     @Test
     public void encode2() {
+        byte i = (byte) 256;
+        System.out.println(Byte.toUnsignedInt(i));
+//        for (byte i = 0; i < 0b1111111; i++) {
+//            System.out.println(i);
+//        }
     }
 }

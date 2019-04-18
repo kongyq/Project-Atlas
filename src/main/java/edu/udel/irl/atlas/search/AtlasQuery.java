@@ -1,6 +1,7 @@
 package edu.udel.irl.atlas.search;
 
 import edu.udel.irl.atlas.search.function.ScoreFunction;
+import edu.udel.irl.atlas.util.Short2Bytes;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
@@ -176,29 +177,29 @@ public class AtlasQuery extends SpanQuery {
     //Combine PayloadSpans as inner private class
     private class PayloadSpans extends FilterSpans implements SpanCollector {
 
-        // store term and payload of each matching.
-        public List<BytesRef> payloadList = new ArrayList<>();
-        public List<Term> termList = new ArrayList<>();
+        public List<AtlasBar> bars = new ArrayList<>();
 
         private PayloadSpans(Spans in) {
             super(in);
         }
 
         @Override
-        protected AcceptStatus accept(Spans candidate) throws IOException {
+        protected AcceptStatus accept(Spans candidate){
             return AcceptStatus.YES;
         }
 
         @Override
         protected void doStartCurrentDoc() {
-            payloadList.clear();
-            termList.clear();
+            bars.clear();
         }
 
         @Override
         public void collectLeaf(PostingsEnum postings, int position, Term term) throws IOException {
-            termList.add(term);
-            payloadList.add(postings.getPayload());
+            if(queryMap.containsKey(term)){
+                for(Map.Entry<BytesRef, Float> entry : queryMap.get(term).entrySet()){
+                    bars.add(new AtlasBar(entry.getValue(), postings.getPayload(), entry.getKey()));
+                }
+            }
         }
 
         @Override
@@ -221,11 +222,11 @@ public class AtlasQuery extends SpanQuery {
         }
 
         protected float getPayloadScore() {
-            return function.docScore(docID(), getField(), spans.termList, spans.payloadList, queryMap);
+            return function.docScore(docID(), getField(), spans.bars);
         }
 
         protected Explanation getPayloadExplanation() {
-            return function.explain(docID(), getField(), spans.termList, spans.payloadList, queryMap);
+            return function.explain(docID(), getField(), spans.bars);
         }
 
         //This may be deprecated in the future if span score is needed no more.

@@ -4,6 +4,7 @@ import org.apache.lucene.search.ScoreDoc;
 
 import java.util.Arrays;
 
+@Deprecated
 public class AtlasScoreDoc implements Comparable<AtlasScoreDoc> {
 
     // Document ID

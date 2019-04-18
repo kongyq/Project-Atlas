@@ -5,6 +5,7 @@ import java.util.Arrays;
 /**
  * A modified TopDocs class stores top hits and matching documents.
  */
+@Deprecated
 public class AtlasTopDocs {
 
     public AtlasScoreDoc[] scoreDocs;

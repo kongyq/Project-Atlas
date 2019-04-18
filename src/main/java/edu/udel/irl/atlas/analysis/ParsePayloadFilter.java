@@ -4,10 +4,7 @@ import edu.udel.irl.atlas.parser.ParserOp;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.opennlp.OpenNLPTokenizer;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.tokenattributes.FlagsAttribute;
-import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
-import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
+import org.apache.lucene.analysis.tokenattributes.*;
 import org.apache.lucene.util.AttributeSource;
 import org.apache.lucene.util.BytesRef;
 
@@ -21,16 +18,17 @@ import java.util.List;
  *    Each token's parsing information encoded into byte array.
  *    E.g.
  *          (ROOT (S (NP (DT The) (JJ quick) (JJ brown) (NN fox)) (VP (VBZ jumps) (PP (IN over) (NP (DT the) (JJ lazy) (NN dog)))) (. .)))
- *          0000
- *          0010
- *          0020
- *          0030
- *          0100
- *          01100
- *          011100
- *          011110
- *          011120
- *          020
+ *          XX0000
+ *          XX0010
+ *          XX0020
+ *          XX0030
+ *          XX0100
+ *          XX01100
+ *          XX011100
+ *          XX011110
+ *          XX011120
+ *          XX020
+ *          XX: byte code of sentence index (short type)
  *    In order to quickly compute the short distance between any two tokens.
  *    <P>
  *        Tags all terms in the TypeAttribute.
@@ -49,6 +47,7 @@ public final class ParsePayloadFilter extends TokenFilter {
 
     private List<AttributeSource> sentenceTokenAttrs = new ArrayList<>();
     private int tokenNum = 0;
+    private short sentNum = 0;
 
     private boolean moreTokensAvailable = true;
     private String[] poses = null;
@@ -86,8 +85,11 @@ public final class ParsePayloadFilter extends TokenFilter {
             }
             this.parserOp.parseSent(sentence);
             poses = this.parserOp.getPosTags();
-            codes = this.parserOp.getCodeList();
+            // Refactored: add sentence index to the head of each code.
+            codes = this.parserOp.getCodeList(sentNum);
+
             tokenNum = 0;
+            sentNum++;
         }
 
         clearAttributes();
@@ -103,6 +105,7 @@ public final class ParsePayloadFilter extends TokenFilter {
         poses = null;
         codes.clear();
         tokenNum = 0;
+        sentNum = 0;
     }
 
     @Override

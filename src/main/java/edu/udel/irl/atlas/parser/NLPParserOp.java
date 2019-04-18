@@ -43,6 +43,12 @@ public class NLPParserOp implements ParserOp<Parse>{
     }
 
     @Override
+    public List<byte[]> getCodeList(Short sentNum) {
+        return ParsePayloadEncoder.encode(this.parse, sentNum);
+    }
+
+
+    @Override
     public synchronized void parseSent(String[] sentence){
         this.parse = parseSent(String.join(" ", sentence));
     }

@@ -59,6 +59,11 @@ public class BerkeleyParserOp implements ParserOp<Tree<String>>{
         return ParsePayloadEncoder.encode(this.parse);
     }
 
+    @Override
+    public List<byte[]> getCodeList(Short sentNum) {
+        return ParsePayloadEncoder.encode(this.parse,sentNum);
+    }
+
     @Deprecated
     public Tree<String> parseSent(String[] sentence, String[] poses){
         return TreeAnnotations.unAnnotateTree(

@@ -12,4 +12,6 @@ public interface ParserOp<T> {
     T getParse();
 
     List<byte[]> getCodeList();
+
+    List<byte[]> getCodeList(Short sentNum);
 }

@@ -53,10 +53,10 @@ public class AppTest
 
         Document document1 = new Document();
         Document document2 = new Document();
-        document1.add(new TextField("text", "The quick brown fox runs over the crimson dog.", Field.Store.YES));
+        document1.add(new TextField("text", "The quick brown fox runs over the crimson dog. There are red apples on those trees.", Field.Store.YES));
         document1.add(new TextField("docId", "document 1", Field.Store.YES));
 //        document2.add(new TextField("text", "A web spider waves on the white wall.", Field.Store.YES));
-        document2.add(new TextField("text", "The swift red fox walks over the ruby dog.", Field.Store.YES));
+        document2.add(new TextField("text", "The swift red fox walks over the ruby dog. This is a pink peach under the tree.", Field.Store.YES));
         document2.add(new TextField("docId", "document 2", Field.Store.YES));
         writer.addDocument(document1);
         writer.addDocument(document2);
@@ -70,8 +70,8 @@ public class AppTest
 //        SpanOrTermsBuilder
         IndexReader reader = DirectoryReader.open(directory);
         AtlasQueryParser queryParser = new AtlasQueryParser("text", new AtlasAnalyzer(), reader);
-        SpanQuery query = queryParser.parse("red run dog");
-        SpanBoostQuery boostQuery = new SpanBoostQuery(query, 2.0f);
+        SpanQuery query = queryParser.parse("fox dog.");
+//        SpanBoostQuery boostQuery = new SpanBoostQuery(query, 2.0f);
 //
 //        SpanOrQuery query = new SpanOrQuery(new SpanTermQuery(new Term("text", "02118333-N")),
 //                new SpanTermQuery(new Term("text", "02084071-N")),
@@ -84,31 +84,31 @@ public class AppTest
 //        QueryParser parser = new QueryParser("text", new AtlasAnalyzer());
 //        Query query = parser.parse("indolent");
 
-//        IndexSearcher searcher =  new IndexSearcher(reader);
+        IndexSearcher searcher =  new IndexSearcher(reader);
 //        TopDocs docs = searcher.search(payloadScoreQuery, 10);
-//        TopDocs docs = searcher.search(query, 10);
+        TopDocs docs = searcher.search(query, 10);
 //
-//        ScoreDoc[] hits = docs.scoreDocs;
+        ScoreDoc[] hits = docs.scoreDocs;
 
-        AtlasIndexSearcher indexSearcher = new AtlasIndexSearcher(reader);
+//        AtlasIndexSearcher indexSearcher = new AtlasIndexSearcher(reader);
+//
+//        AtlasTopDocs topDocs = indexSearcher.search(boostQuery, 10);
+//
+//        AtlasScoreDoc[] hits = topDocs.scoreDocs;
 
-        AtlasTopDocs topDocs = indexSearcher.search(boostQuery, 10);
 
-        AtlasScoreDoc[] hits = topDocs.scoreDocs;
-
-
-        System.out.println("Found " + hits.length + " hits.");
-        for(int i=0;i<hits.length;++i) {
-            String docId = hits[i].docId;
-            float score = hits[i].score;
-//            Document d = searcher.doc(docId);
-            System.out.println((i + 1) + ". " + docId + " score: " + score);
-        }
-
-        for(AtlasScoreDoc scoreDoc: hits){
-            Explanation explanation = indexSearcher.explain(query, scoreDoc);
-            System.out.println(explanation.toString());
-        }
+//        System.out.println("Found " + hits.length + " hits.");
+//        for(int i=0;i<hits.length;++i) {
+//            String docId = hits[i].docId;
+//            float score = hits[i].score;
+////            Document d = searcher.doc(docId);
+//            System.out.println((i + 1) + ". " + docId + " score: " + score);
+//        }
+//
+//        for(AtlasScoreDoc scoreDoc: hits){
+//            Explanation explanation = indexSearcher.explain(query, scoreDoc);
+//            System.out.println(explanation.toString());
+//        }
 
 //        for(AtlasScoreDoc scoreDoc: hits){
 //            for(ScoreDoc match: scoreDoc.scoreDocs){
@@ -119,16 +119,16 @@ public class AppTest
 //        }
 
         System.out.println("Found " + hits.length + " hits.");
-//        for(int i=0;i<hits.length;++i) {
-//            int docId = hits[i].doc;
-//            Document d = searcher.doc(docId);
-//            System.out.println((i + 1) + ". " + d.get("text"));
-//        }
-//        for(ScoreDoc match: hits){
-//            System.out.println(match.score);
-//            Explanation explanation = searcher.explain(query, match.doc);
-//            System.out.println(explanation.toString());
-//        }
+        for(int i=0;i<hits.length;++i) {
+            int docId = hits[i].doc;
+            Document d = searcher.doc(docId);
+            System.out.println((i + 1) + ". " + d.get("text"));
+        }
+        for(ScoreDoc match: hits){
+            System.out.println(match.score);
+            Explanation explanation = searcher.explain(query, match.doc);
+            System.out.println(explanation.toString());
+        }
     }
 
     @Test
