@@ -27,28 +27,28 @@ public class ParsePayloadEncoderTest {
 
     @Test
     public void encode() {
-        parserOp.parseSent("The quick brown fox jumps over the lazy dog .".split(" "));
-        Parse parses = parserOp.getParse();
-
-        List<byte[]> ans = ParsePayloadEncoder.encode(parses, (short) 2);
-        for(byte[] codes: ans){
-            for(byte code: codes) System.out.print(code);
-            System.out.println();
-        }
-//        parses.showCodeTree();
+//        parserOp.parseSent("The quick brown fox jumps over the lazy dog .".split(" "));
+//        Parse parses = parserOp.getParse();
+//
+//        List<byte[]> ans = ParsePayloadEncoder.encode(parses, (short) 2);
+//        for(byte[] codes: ans){
+//            for(byte code: codes) System.out.print(code);
+//            System.out.println();
+//        }
+////        parses.showCodeTree();
     }
 
     @Test
     public void encode1() {
-        String sentence = "The quick brown fox jumps over the lazy dog .";
-        parserOp.parseSent(sentence.split(" "));
-        Tree<String> parse = this.berkeleyParserOp.getParse();
-        System.out.println(parse.toString());
-        List<byte[]> ans = ParsePayloadEncoder.encode(parse);
-        for(byte[] codes: ans){
-            for(byte code: codes) System.out.print(code);
-            System.out.println();
-        }
+//        String sentence = "The quick brown fox jumps over the lazy dog .";
+//        parserOp.parseSent(sentence.split(" "));
+//        Tree<String> parse = this.berkeleyParserOp.getParse();
+//        System.out.println(parse.toString());
+//        List<byte[]> ans = ParsePayloadEncoder.encode(parse);
+//        for(byte[] codes: ans){
+//            for(byte code: codes) System.out.print(code);
+//            System.out.println();
+//        }
     }
 
     @Test

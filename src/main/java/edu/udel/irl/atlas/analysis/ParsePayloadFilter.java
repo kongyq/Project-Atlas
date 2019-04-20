@@ -38,7 +38,7 @@ import java.util.List;
  */
 public final class ParsePayloadFilter extends TokenFilter {
 
-    private final ParserOp parserOp;
+    private final ParserOp.OpParser opParser;
 
     private final PayloadAttribute payloadAtt = addAttribute(PayloadAttribute.class);
     private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
@@ -55,7 +55,7 @@ public final class ParsePayloadFilter extends TokenFilter {
 
     public ParsePayloadFilter(TokenStream input, ParserOp parserOp){
         super(input);
-        this.parserOp = parserOp;
+        this.opParser = parserOp.createParser();
     }
 
     private String[] nextSentence() throws IOException {
@@ -83,10 +83,11 @@ public final class ParsePayloadFilter extends TokenFilter {
                 clear();
                 return false;
             }
-            this.parserOp.parseSent(sentence);
-            poses = this.parserOp.getPosTags();
+
             // Refactored: add sentence index to the head of each code.
-            codes = this.parserOp.getCodeList(sentNum);
+            this.opParser.parseSent(sentence);
+            poses = this.opParser.getPosTags();
+            codes = this.opParser.getCodeList(sentNum);
 
             tokenNum = 0;
             sentNum++;

@@ -14,11 +14,16 @@ public class BerkeleyParserOpTest {
     }
     @Test
     public void parseSent() {
+        String sentence2 = "the quick brown fox jumps over the lazy dog .";
+        String sentence = "Interested persons may obtain further information by contacting the Federal Energy Regulatory Commission , 941 North Capitol Street , NE. , Washington , DC 20426 [Attention : Michael Miller , Information Services Division , ( 202 ) 208&hyph ;1415] .";
+        ParserOp.OpParser parser = this.parserOp.createParser();
 
-        String sentence = "The quick brown fox jumps over the lazy dog .";
-        this.parserOp.parseSent(sentence.split(" "));
-        System.out.println(this.parserOp.getParse().toString());
-        for(String pos: this.parserOp.getPosTags()) System.out.println(pos);
+        parser.parseSent(sentence2.split(" "));
+//        ((BerkeleyParserOp.OpParser) parser).parse.toString();
+        for(String pos: parser.getPosTags()) System.out.println(pos);
+//        for(Tree<String> t: ((BerkeleyParserOp.OpParser) parser).parse) System.out.println(t.getLabel());
+//        System.out.println(parser.getParse().toString());
+//        for(String pos: this.parserOp.getPosTags()) System.out.println(pos);
 //        for(Tree<String> t: parse.getPreTerminals()){
 //            System.out.println(t.getLabel());
 //        }
@@ -26,9 +31,9 @@ public class BerkeleyParserOpTest {
 
     @Test
     public void parseSent1() {
-        String sentence = "The quick brown fox jumps over the lazy dog";
-        String poses = "DT JJ JJ NN VBZ IN DT JJ NN";
-        Tree<String> parse = this.parserOp.parseSent(sentence.split(" "), poses.split(" "));
-        System.out.println(parse.toEscapedString());
+//        String sentence = "The quick brown fox jumps over the lazy dog";
+//        String poses = "DT JJ JJ NN VBZ IN DT JJ NN";
+//        Tree<String> parse = this.parserOp.parseSent(sentence.split(" "), poses.split(" "));
+//        System.out.println(parse.toEscapedString());
     }
 }

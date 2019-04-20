@@ -2,16 +2,30 @@ package edu.udel.irl.atlas.parser;
 
 import java.util.List;
 
-public interface ParserOp<T> {
-//    T parseSent(String[] sentence);
+/**
+ * Refactored to make parsers thread-safe
+ */
+public abstract class ParserOp {
 
-    void parseSent(String[] sentence);
+    public abstract OpParser createParser();
 
-    String[] getPosTags();
+    /**
+     * inner class contains components that need to be created for each thread
+     * @param <P>
+     */
+    public abstract class OpParser<P>{
+        public P parser;
 
-    T getParse();
+        OpParser(P parser){
+            this.parser = parser;
+        }
 
-    List<byte[]> getCodeList();
+        public abstract void parseSent(String[] sentence);
 
-    List<byte[]> getCodeList(Short sentNum);
+        public abstract List<byte[]> getCodeList();
+
+        public abstract List<byte[]> getCodeList(short sentNum);
+
+        public abstract String[] getPosTags();
+    }
 }

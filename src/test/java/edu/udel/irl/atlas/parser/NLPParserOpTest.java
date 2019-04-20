@@ -7,6 +7,7 @@ import org.junit.Test;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
@@ -20,16 +21,10 @@ public class NLPParserOpTest {
 
     @Test
     public void parseSent() {
-        Parse parses = parserOp.parseSent("The quick brown fox jumps over the lazy dog .");
-//        parses.show();
-//        parses.toString();
-//        parses.getTokenNodes()[0].show();
-//        System.out.println(parses.getHeadIndex());
-//        parses.showCodeTree();
-        Parse[] pp = parses.getTagNodes();
-        for(Parse p: pp){
-            System.out.println(p.getType());
-        }
+        String sentence = "the quick brown fox jumps over the lazy dog .";
+        ParserOp.OpParser parser = this.parserOp.createParser();
+        parser.parseSent(sentence.split(" "));
+        ((NLPParserOp.OpParser) parser).parse.show();
     }
 
 

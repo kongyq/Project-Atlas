@@ -12,48 +12,62 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class NLPParserOp implements ParserOp<Parse>{
-    private final Parser parser;
-    private Parse parse;
+/**
+ * An openNLP parser extends {@link ParserOp}.
+ * This will share one parser model among all threads,
+ * but create instance for each thread to make the parser
+ * thread-safe.
+ */
+public class NLPParserOp extends ParserOp{
+    // Parse model shared among all threads
+    private final ParserModel model;
 
     public NLPParserOp(){
-        this.parser = null;
+        this.model = null;
     }
 
     public NLPParserOp(File modelFile) throws IOException {
         this(new ParserModel(modelFile));
     }
     public NLPParserOp(ParserModel parserModel){
-        this.parser = ParserFactory.create(parserModel);
+        this.model = parserModel;
     }
 
+    /**Create a instance of {@link OpParser } which extends {@link ParserOp.OpParser}
+     * for {@link edu.udel.irl.atlas.analysis.ParsePayloadFilter} to parse the {@link org.apache.lucene.analysis.TokenStream}
+     * @return a {@link OpParser} instance
+     */
     @Override
-    public String[] getPosTags() {
-        return Arrays.stream(this.parse.getTagNodes()).map(Parse::getType).toArray(String[]::new);
+    public OpParser createParser(){
+        return new OpParser(ParserFactory.create(this.model));
     }
 
-    @Override
-    public Parse getParse() {
-        return this.parse;
-    }
+    public class OpParser extends ParserOp.OpParser<Parser>{
 
-    @Override
-    public List<byte[]> getCodeList() {
-        return ParsePayloadEncoder.encode(this.parse);
-    }
+        public Parse parse;
 
-    @Override
-    public List<byte[]> getCodeList(Short sentNum) {
-        return ParsePayloadEncoder.encode(this.parse, sentNum);
-    }
+        OpParser(Parser parser) {
+            super(parser);
+        }
 
+        @Override
+        public void parseSent(String[] sentence) {
+            this.parse = ParserTool.parseLine(String.join(" ", sentence), parser, 1)[0];
+        }
 
-    @Override
-    public synchronized void parseSent(String[] sentence){
-        this.parse = parseSent(String.join(" ", sentence));
-    }
+        @Override
+        public List<byte[]> getCodeList() {
+            return ParsePayloadEncoder.encode(parse);
+        }
 
-    public synchronized Parse parseSent(String sentence){
-        return ParserTool.parseLine(sentence, this.parser, 1)[0];
+        @Override
+        public List<byte[]> getCodeList(short sentNum) {
+            return ParsePayloadEncoder.encode(parse, sentNum);
+        }
+
+        @Override
+        public String[] getPosTags() {
+            return Arrays.stream(parse.getTagNodes()).map(Parse::getType).toArray(String[]::new);
+        }
     }
 }

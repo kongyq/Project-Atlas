@@ -1,6 +1,7 @@
 package edu.udel.irl.atlas.benchmark;
 
 import edu.udel.irl.atlas.analysis.AtlasAnalyzer;
+import edu.udel.irl.atlas.index.ThreadIndexWriter;
 import edu.udel.irl.atlas.util.AtlasConfiguration;
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
@@ -59,67 +60,11 @@ public class Trec7Test {
         return tcs.getItemsCount();
     }
 
-//    public Document[] getDocuments(DocData docData){
-//        System.out.println(docData.getName());
-//        String[] bodySentences = this.sentenceSplitter.sentDetect(docData.getBody());
-//        int sentCount = bodySentences.length;
-//        Document[] sentDoc = new Document[sentCount];
-//        for(int i = 0; i < sentCount; i ++){
-//            sentDoc[i].add(new TextField("text", bodySentences[i], Field.Store.NO));
-//            sentDoc[i].add(new StoredField("docId", docData.getName()));
-//        }
-//
-//        if(docData.getTitle() != null){
-//            String[] titleSentences = this.sentenceSplitter.sentDetect(docData.getTitle());
-//            int newStart = sentCount;
-//            sentCount += titleSentences.length;
-//            for (int i = newStart, j = 0; i < sentCount; i++, j++) {
-//                sentDoc[i].add(new TextField("title", titleSentences[j],Field.Store.YES));
-//                sentDoc[i].add(new StoredField("docId", docData.getName()));
-//            }
-//        }
-//        return sentDoc;
-//    }
-//
-//    private Document[] getDocuments(String field, String text){
-//        String[] sentences = this.sentenceSplitter.sentDetect(text);
-//        Document[] sentDoc = new Document[sentences.length];
-//        for (int i = 0; i < sentences.length; i++) {
-//            sentDoc[i].add(new TextField(field, sentences[i], Field.Store.NO));
-//            sentDoc[i].add(new StoredField("docId", ))
-//        }
-//    }
-
-    public List<Document> getDocuments(DocData docData) {
-        String[] bodySentences = this.sentenceSplitter.sentDetect(docData.getBody());
-        List<Document> documents = new ArrayList<>();
-//        Document document = new Document();
-        for(String body: bodySentences){
-            Document document = new Document();
-
-//            document.clear();
-            document.add(new TextField("text", body, Field.Store.YES));
-            document.add(new StoredField("docId", docData.getName()));
-            documents.add(document);
-        }
-        if(docData.getTitle() != null){
-            String[] titleSentences = this.sentenceSplitter.sentDetect(docData.getTitle());
-            for (String title : titleSentences) {
-                Document document = new Document();
-
-//                document.clear();
-                document.add(new TextField("title", title, Field.Store.YES));
-                document.add(new StoredField("docId", docData.getName()));
-                documents.add(document);
-            }
-        }
-        return documents;
-    }
 
     public Document getNextDocument(DocData docData){
-        System.out.println(docData.getName());
+//        System.out.println(docData.getName());
         Document document = new Document();
-        if(docData.getTitle() != null)
+        if(!docData.getTitle().isEmpty())
             document.add(new TextField("title", docData.getTitle(), Field.Store.YES));
         document.add(new TextField("text", docData.getBody(), Field.Store.NO));
         document.add(new StoredField("docId", docData.getName()));
@@ -127,22 +72,21 @@ public class Trec7Test {
         return document;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, NoMoreDataException {
 
         System.out.println("Start indexing!");
         long startTime = System.currentTimeMillis();
         final Path indexDir = new File("/home/mike/Documents/Index/Trec7").toPath();
         Directory dir = NIOFSDirectory.open(indexDir);
-        IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(new AtlasAnalyzer()));
+        IndexWriter writer = new ThreadIndexWriter(dir, new IndexWriterConfig(new AtlasAnalyzer()), 4, 20);
+//        IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(new AtlasAnalyzer()));
 
         Trec7Test trec7Test = new Trec7Test();
         DocData docData = new DocData();
         int count = 0;
-        while (count < 10) {
+        while (count < 100) {
             try {
-//                System.out.println(trec7Test.getNextDoc(docData).getName());
-//                writer.addDocument(trec7Test.getNextDocument(trec7Test.getNextDoc(docData)));
-                writer.addDocuments(trec7Test.getDocuments(trec7Test.getNextDoc(docData)));
+                writer.addDocument(trec7Test.getNextDocument(trec7Test.getNextDoc(docData)));
                 System.out.println(docData.getName());
                 count++;
                 if (count % 100 == 0) {

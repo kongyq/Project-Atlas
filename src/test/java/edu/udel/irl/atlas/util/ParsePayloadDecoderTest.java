@@ -20,8 +20,8 @@ public class ParsePayloadDecoderTest {
     }
     @Test
     public void getShortestPath() {
-        parserOp.parseSent(this.sentence.split(" "));
-        List<byte[]> codeList = parserOp.getCodeList();
-        System.out.println(ParsePayloadDecoder.getShortestPath(codeList.get(0), codeList.get(1)));
+//        parserOp.parseSent(this.sentence.split(" "));
+//        List<byte[]> codeList = parserOp.getCodeList();
+//        System.out.println(ParsePayloadDecoder.getShortestPath(codeList.get(0), codeList.get(1)));
     }
 }

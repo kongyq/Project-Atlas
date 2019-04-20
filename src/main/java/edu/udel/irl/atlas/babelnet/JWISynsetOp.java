@@ -78,7 +78,7 @@ public class JWISynsetOp implements SynsetOp {
     }
 
     @Override
-    public synchronized String getSynsetId(String lemma, String pos) {
+    public String getSynsetId(String lemma, String pos) {
         String simplePOS = uposMapper.convert(pos);
         if(simplePOS == null) return lemma;
         IIndexWord indexWord = this.dictionary.getIndexWord(lemma, POS.valueOf(simplePOS));
