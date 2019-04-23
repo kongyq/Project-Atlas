@@ -11,6 +11,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+//TODO: This parser is not stable for mass document processing. Do not use it!!
+
 /**
  * An Berkeley parser extends {@link ParserOp}.
  * This will share one parser model among all threads,
@@ -57,6 +59,11 @@ public class BerkeleyParserOp extends ParserOp{
 
         OpParser(CoarseToFineMaxRuleParser parser) {
             super(parser);
+        }
+
+        @Override
+        public String[] getSentence() {
+            return this.parse.getTerminalYield().toArray(new String[0]);
         }
 
         @Override

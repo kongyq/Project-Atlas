@@ -45,11 +45,13 @@ public final class ParsePayloadFilter extends TokenFilter {
     private final TypeAttribute typeAtt = addAttribute(TypeAttribute.class);
     private final FlagsAttribute flagsAtt = addAttribute(FlagsAttribute.class);
 
-    private List<AttributeSource> sentenceTokenAttrs = new ArrayList<>();
+//    private List<AttributeSource> sentenceTokenAttrs = new ArrayList<>();
     private int tokenNum = 0;
     private short sentNum = 0;
 
     private boolean moreTokensAvailable = true;
+
+    private String[] sentence = new String[0];
     private String[] poses = null;
     private List<byte[]> codes = new ArrayList<>();
 
@@ -60,12 +62,12 @@ public final class ParsePayloadFilter extends TokenFilter {
 
     private String[] nextSentence() throws IOException {
         List<String> termList = new ArrayList<>();
-        sentenceTokenAttrs.clear();
+//        sentenceTokenAttrs.clear();
         boolean endOfSentence = false;
         while(!endOfSentence && (moreTokensAvailable = input.incrementToken())){
             termList.add(termAtt.toString());
             endOfSentence = 0 != (flagsAtt.getFlags() & OpenNLPTokenizer.EOS_FLAG_BIT);
-            sentenceTokenAttrs.add(input.cloneAttributes());
+//            sentenceTokenAttrs.add(input.cloneAttributes());
         }
         return termList.size() > 0 ? termList.toArray(new String[0]) : null;
     }
@@ -77,15 +79,16 @@ public final class ParsePayloadFilter extends TokenFilter {
             return false;
         }
 
-        if(tokenNum == sentenceTokenAttrs.size()){  // beginning of stream, or previous sentence exhausted
-            String[] sentence = nextSentence();
-            if(sentence == null){
+        if(tokenNum == sentence.length){    // beginning of stream, or previous sentence exhausted
+            String[] origSentence = nextSentence();
+            if(origSentence == null){
                 clear();
                 return false;
             }
 
             // Refactored: add sentence index to the head of each code.
-            this.opParser.parseSent(sentence);
+            this.opParser.parseSent(origSentence);
+            sentence = this.opParser.getSentence(); //some parser may reform the sentence
             poses = this.opParser.getPosTags();
             codes = this.opParser.getCodeList(sentNum);
 
@@ -94,7 +97,15 @@ public final class ParsePayloadFilter extends TokenFilter {
         }
 
         clearAttributes();
-        sentenceTokenAttrs.get(tokenNum).copyTo(this);
+        //Since some parser (OpenNLP) may reform the sentence, this may change the length of the sentence.
+        //Thus the offset attribute will be compromised, I have to discard this attribute.
+        //And reset all attributes.
+//        sentenceTokenAttrs.get(tokenNum).copyTo(this);
+
+        //Set all attributes
+        if(tokenNum == sentence.length-1)
+            flagsAtt.setFlags(flagsAtt.getFlags() | OpenNLPTokenizer.EOS_FLAG_BIT);
+        termAtt.setEmpty().append(sentence[tokenNum]);  //reset the token term
         typeAtt.setType(poses[tokenNum]);     //tags the token
         payloadAtt.setPayload(new BytesRef(codes.get(tokenNum)));       //encode the token
         tokenNum++;
@@ -102,7 +113,8 @@ public final class ParsePayloadFilter extends TokenFilter {
     }
 
     private void clear(){
-        sentenceTokenAttrs.clear();
+//        sentenceTokenAttrs.clear();
+        sentence = new String[0];
         poses = null;
         codes.clear();
         tokenNum = 0;

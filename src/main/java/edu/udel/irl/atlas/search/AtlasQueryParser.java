@@ -13,8 +13,9 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.index.*;
+import org.apache.lucene.search.MatchNoDocsQuery;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.spans.SpanOrQuery;
-import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.util.BytesRef;
 
@@ -80,7 +81,7 @@ public class AtlasQueryParser{
         this.function = function;
         // Add all synsets of the index into synsetList
         Terms terms = MultiFields.getTerms(Objects.requireNonNull(reader), field);
-        this.synsetsInIndex = new ArrayList<>((int) terms.size());
+        this.synsetsInIndex = new ArrayList<>();
         TermsEnum termsEnum = terms.iterator();
         while(termsEnum.next() != null){
             synsetsInIndex.add(termsEnum.term().utf8ToString());
@@ -93,10 +94,11 @@ public class AtlasQueryParser{
      * @return {@code AtlasQuery}
      * @throws IOException if the query map fail to be created.
      */
-    public SpanQuery parse(String queryText) throws IOException {
+    public Query parse(String queryText) throws IOException {
         TokenStream tokenStream = analyzer.tokenStream(field, queryText);
         atlazing(tokenStream, crossAllPOS);
 
+        if(queryMap.isEmpty()) return new MatchNoDocsQuery("No similar term of the query found in the index!");
         return new AtlasQuery(createSpanOrQuery(field, queryMap.keySet()), function, queryMap);
     }
 
@@ -107,7 +109,7 @@ public class AtlasQueryParser{
      * @return a {@code SpanOrQuery}
      */
     public SpanOrQuery createSpanOrQuery(String field, Set<Term> terms){
-        assert !terms.isEmpty() : "CreateSpanOrQuery: no Terms!";
+//        assert !terms.isEmpty() : "CreateSpanOrQuery: no Terms!";
         List<SpanTermQuery> spanTermQueries = new ArrayList<>(terms.size());
         for(Term term: terms){
             spanTermQueries.add(new SpanTermQuery(term));

@@ -20,6 +20,8 @@ public abstract class ParserOp {
             this.parser = parser;
         }
 
+        public abstract String[] getSentence();
+
         public abstract void parseSent(String[] sentence);
 
         public abstract List<byte[]> getCodeList();

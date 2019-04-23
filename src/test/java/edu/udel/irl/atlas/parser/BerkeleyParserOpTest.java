@@ -19,6 +19,7 @@ public class BerkeleyParserOpTest {
         ParserOp.OpParser parser = this.parserOp.createParser();
 
         parser.parseSent(sentence2.split(" "));
+        System.out.println(String.join(" ", parser.getSentence()));
 //        ((BerkeleyParserOp.OpParser) parser).parse.toString();
         for(String pos: parser.getPosTags()) System.out.println(pos);
 //        for(Tree<String> t: ((BerkeleyParserOp.OpParser) parser).parse) System.out.println(t.getLabel());

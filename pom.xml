@@ -47,7 +47,9 @@
     <dependency>
       <groupId>edu.berkeley.nlp</groupId>
       <artifactId>berkeleyparser</artifactId>
-      <version>r32</version>
+      <version>1.7</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/BerkeleyParser-1.7.jar</systemPath>
     </dependency>
 
     <dependency>

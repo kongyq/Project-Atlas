@@ -3,8 +3,6 @@ package edu.udel.irl.atlas.benchmark;
 import edu.udel.irl.atlas.analysis.AtlasAnalyzer;
 import edu.udel.irl.atlas.index.ThreadIndexWriter;
 import edu.udel.irl.atlas.util.AtlasConfiguration;
-import opennlp.tools.sentdetect.SentenceDetectorME;
-import opennlp.tools.sentdetect.SentenceModel;
 import org.apache.lucene.benchmark.byTask.feeds.DocData;
 import org.apache.lucene.benchmark.byTask.feeds.NoMoreDataException;
 import org.apache.lucene.benchmark.byTask.feeds.TrecContentSource;
@@ -22,14 +20,12 @@ import org.apache.lucene.store.NIOFSDirectory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 public class Trec7Test {
 
 
-    private final SentenceDetectorME sentenceSplitter;
+//    private final SentenceDetectorME sentenceSplitter;
     private TrecContentSource tcs = new TrecContentSource();
     Properties props = new Properties();
     File dataDir = new File("/home/mike/Documents/corpus/Trec7");
@@ -38,7 +34,7 @@ public class Trec7Test {
 
         String sentenceDetectModel = AtlasConfiguration.getInstance().getSentenceModel();
         String modelFolder = AtlasConfiguration.getInstance().getModelFolder();
-        this.sentenceSplitter = new SentenceDetectorME(new SentenceModel(new File(modelFolder, sentenceDetectModel)));
+//        this.sentenceSplitter = new SentenceDetectorME(new SentenceModel(new File(modelFolder, sentenceDetectModel)));
 
         props.setProperty("print.props", "false");
         props.setProperty("content.source.verbose", "false");
@@ -64,35 +60,57 @@ public class Trec7Test {
     public Document getNextDocument(DocData docData){
 //        System.out.println(docData.getName());
         Document document = new Document();
-        if(!docData.getTitle().isEmpty())
+        System.out.println(tcs.getConfig().get("trec.doc.parser", "!!"));
+//        System.out.println(docData.getBody());
+        if(!docData.getTitle().isEmpty()) {
+//            System.out.println(docData.getTitle());
             document.add(new TextField("title", docData.getTitle(), Field.Store.YES));
+        }
         document.add(new TextField("text", docData.getBody(), Field.Store.NO));
         document.add(new StoredField("docId", docData.getName()));
 //        document.clear();
         return document;
     }
 
-    public static void main(String[] args) throws IOException, NoMoreDataException {
+    public static void main(String[] args) throws IOException {
 
         System.out.println("Start indexing!");
         long startTime = System.currentTimeMillis();
-        final Path indexDir = new File("/home/mike/Documents/Index/Trec7").toPath();
+        final Path indexDir = new File("/home/mike/Documents/Index/test").toPath();
         Directory dir = NIOFSDirectory.open(indexDir);
-        IndexWriter writer = new ThreadIndexWriter(dir, new IndexWriterConfig(new AtlasAnalyzer()), 4, 20);
+        IndexWriterConfig iwc = new IndexWriterConfig(new AtlasAnalyzer());
+        iwc.setRAMBufferSizeMB(256d);
+        IndexWriter writer = new ThreadIndexWriter(dir, iwc, 4, 20);
 //        IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(new AtlasAnalyzer()));
 
         Trec7Test trec7Test = new Trec7Test();
         DocData docData = new DocData();
         int count = 0;
-        while (count < 100) {
+//
+//        trec7Test.getNextDoc(docData);
+//        while (!docData.getName().equals("FR940706-0-00067")) {
+//            trec7Test.getNextDoc(docData);
+//        }
+
+        while (true) {
             try {
+//                DocData dd = trec7Test.getNextDoc(docData);
+//                System.out.println(dd.getName());
+//                System.out.println(dd.getBody());
+//                writer.addDocument(trec7Test.getNextDocument(dd));
                 writer.addDocument(trec7Test.getNextDocument(trec7Test.getNextDoc(docData)));
-                System.out.println(docData.getName());
+//                System.out.println(docData.getName());
                 count++;
-                if (count % 100 == 0) {
+                if (count % 1000 == 0) {
+                    System.out.println("Current indexing document : " + docData.getName());
+                    System.out.println("Current indexed documents : " + writer.numDocs());
                     System.out.println(count + " documents indexed.");
+                    System.out.println("Elapsed time: " + (System.currentTimeMillis() - startTime) / 60000 + " minutes");
                 }
-            } catch (NoMoreDataException e) {
+            } catch (NoMoreDataException e){
+                break;
+            } catch (Exception e) {
+                e.printStackTrace();
                 break;
             }
         }

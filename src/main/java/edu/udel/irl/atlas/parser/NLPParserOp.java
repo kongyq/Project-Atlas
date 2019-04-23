@@ -51,6 +51,11 @@ public class NLPParserOp extends ParserOp{
         }
 
         @Override
+        public String[] getSentence() {
+            return this.parse.getText().split(" ");
+        }
+
+        @Override
         public void parseSent(String[] sentence) {
             this.parse = ParserTool.parseLine(String.join(" ", sentence), parser, 1)[0];
         }

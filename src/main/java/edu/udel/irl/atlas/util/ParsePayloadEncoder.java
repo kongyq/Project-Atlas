@@ -24,7 +24,9 @@ public class ParsePayloadEncoder {
 
     /**
      * <P>Encode each token in the parsing tree with their corresponding positions.</P>
-     *
+     *<B>NOTE:</B> if any constituency part of the sentence contains more then 256 terminal words will fail to code.
+     * since one byte can only contain unsigned 256 numbers.
+     * In order to not interrupt the indexing process, any word beyond 256 will has the same code.
      * @param codeList Encoded List
      * @param parse    Parsing tree
      * @param levels   Height of the starting point
@@ -34,10 +36,10 @@ public class ParsePayloadEncoder {
             codeList.add(levels);
         else {
             Parse[] children = parse.getChildren();
-            assert children.length <= 256 : "Error, the words in the same sentence level are over 256!!";
-            for (int i = 0; i < Math.min(children.length, 256); i++) {  // Used unsigned byte to store the position, thus it can code 256 tokens maximum.
+//            if(children.length <= 256) System.out.println("Error, the words in the same sentence level are over 256!!");
+            for (int i = 0; i < children.length; i++) {  // Used unsigned byte to store the position, thus it can code 256 tokens maximum.
                 byte[] nextLevels = Arrays.copyOf(levels, levels.length + 1);
-                nextLevels[levels.length] = (byte) i;
+                nextLevels[levels.length] = (byte) Math.min(i, 255);
                 encode(codeList, children[i], nextLevels);
             }
         }
@@ -45,7 +47,9 @@ public class ParsePayloadEncoder {
 
     /**
      * <P>Encode each token in the parsing tree with their corresponding positions.</P>
-     *
+     *<B>NOTE:</B> if any constituency part of the sentence contains more then 256 terminal words will fail to code.
+     * since one byte can only contain 256 unsigned numbers.
+     * In order to not interrupt the indexing process, any word beyond 256 will has the same code.
      * @param codeList Encoded List
      * @param parse    Parsing tree
      * @param levels   Height of the starting point
@@ -55,10 +59,10 @@ public class ParsePayloadEncoder {
             codeList.add(levels);
         else {
             List<Tree<L>> children = parse.getChildren();
-            assert children.size() <= 256 : "Error, the words in the same sentence level are over 256!!";
-            for (int i = 0; i < Math.min(children.size(), 256); i++) {
+//            if(children.size() <= 256) System.out.println("Error, the words in the same sentence level are over 256!!");
+            for (int i = 0; i < children.size(); i++) {
                 byte[] nextLevels = Arrays.copyOf(levels, levels.length + 1);
-                nextLevels[levels.length] = (byte) i;
+                nextLevels[levels.length] = (byte) Math.min(i, 255);
                 encode(codeList, children.get(i), nextLevels);
             }
         }
