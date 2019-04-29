@@ -5,6 +5,7 @@ import edu.udel.irl.atlas.search.function.AtlasScoreFunction;
 import edu.udel.irl.atlas.search.function.ScoreFunction;
 import edu.udel.irl.atlas.synsim.SynsetSimilarity;
 import edu.udel.irl.atlas.util.AtlasConfiguration;
+import edu.udel.irl.atlas.util.SynsetFormatChecker;
 import it.unimi.dsi.fastutil.objects.*;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -15,6 +16,7 @@ import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.MatchNoDocsQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.spans.SpanNearQuery;
 import org.apache.lucene.search.spans.SpanOrQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.util.BytesRef;
@@ -31,6 +33,7 @@ import java.util.*;
 public class AtlasQueryParser{
     private final double THRESHOLD = AtlasConfiguration.getInstance().getSimilarityThreshold();
     private final boolean crossAllPOS = AtlasConfiguration.getInstance().isExpansionCrossPOS();
+    private final boolean expandSynset = AtlasConfiguration.getInstance().expandSynset();
     private final String synsetComparator = AtlasConfiguration.getInstance().getSynsetComparatorClassName();
 
     private final Analyzer analyzer;
@@ -96,10 +99,18 @@ public class AtlasQueryParser{
      */
     public Query parse(String queryText) throws IOException {
         TokenStream tokenStream = analyzer.tokenStream(field, queryText);
+//        atlazing(analyzer.tokenStream(field, queryText), crossAllPOS);
         atlazing(tokenStream, crossAllPOS);
+        tokenStream.close();
+
+//        System.out.println(queryMap.keySet().size());
+//        for (Term term : queryMap.keySet()) {
+//            System.out.println(term.toString());
+//        }
 
         if(queryMap.isEmpty()) return new MatchNoDocsQuery("No similar term of the query found in the index!");
-        return new AtlasQuery(createSpanOrQuery(field, queryMap.keySet()), function, queryMap);
+        if(queryMap.size() == 1) return new AtlasQuery(createSpanOrQuery(field, queryMap.keySet()), function, queryMap);
+        return new AtlasQuery(createSpanNearQuery(field, queryMap.keySet()), function, queryMap);
     }
 
     /**
@@ -115,6 +126,21 @@ public class AtlasQueryParser{
             spanTermQueries.add(new SpanTermQuery(term));
         }
         return new SpanOrQuery(spanTermQueries.toArray(new SpanTermQuery[0]));
+    }
+
+    /**
+     * Create a SpanNearQuery from the similar terms set.
+     * @param field field name
+     * @param terms set of similar terms
+     * @return a {@code SpanNearQuery}
+     */
+    public SpanNearQuery createSpanNearQuery(String field, Set<Term> terms) {
+        SpanNearQuery.Builder builder = new SpanNearQuery.Builder(field, false);
+        for (Term term : terms) {
+            builder.addClause(new SpanTermQuery(term));
+        }
+        builder.setSlop(Integer.MAX_VALUE);
+        return builder.build();
     }
 
     /**
@@ -147,33 +173,39 @@ public class AtlasQueryParser{
         }
         assert queryPayloads.size() == queryTokens.size():"atlazing failure: payload size does not match token size!";
 
-        for(String synset: synsetsInIndex){
-            Object2FloatOpenHashMap<BytesRef> payloadSimMap = new Object2FloatOpenHashMap<>();
+//        System.out.println(synsetsInIndex.size());
 
+        Object2FloatOpenHashMap<BytesRef> payloadSimMap = new Object2FloatOpenHashMap<>();
+
+
+//        int c = 0;
+        for(String synset: synsetsInIndex){
+//            if(c % 10000 == 0){
+//                System.out.println(c);
+//            }
+//            c++;
 //            System.out.println(synset + " -> ");
             for(int i = 0; i < queryTokens.size(); i ++){
                 String token = queryTokens.get(i);
 
-                // if the expansion only for same type of POS, check synset and token POS.
-                if(!crossAllPOS && token.charAt(token.length()-1) != synset.charAt(synset.length()-1)){
-//                    System.out.println(token + " skipped!");
-                    continue;
-                }
-
-                if(token.equals(synset)){
+                if(token.equals(synset)) {
                     payloadSimMap.put(queryPayloads.get(i), 1f);
-                }else{
-                    float similarity = (float) synsetSimilarity.compare(token, synset);
+                }else if(expandSynset && SynsetFormatChecker.check(synset) && SynsetFormatChecker.check(token)){
+                    // if the expansion only for same type of POS, check synset and token POS.
+                    if (crossAllPOS || (token.charAt(token.length() - 1) == synset.charAt(synset.length() - 1))) {
+                        float similarity = (float) synsetSimilarity.compare(token, synset);
 //                    System.out.print(token + " " + similarity);
-                    if(similarity >= THRESHOLD){
+                        if (similarity >= THRESHOLD) {
 //                        System.out.print(":" + queryPayloads.get(i));
-                        payloadSimMap.put(queryPayloads.get(i), similarity);
+                            payloadSimMap.put(queryPayloads.get(i), similarity);
+                        }
                     }
 //                System.out.println();
                 }
             }
             if (!payloadSimMap.isEmpty()) {
-                queryMap.put(new Term(field, synset), payloadSimMap);
+                queryMap.put(new Term(field, synset), new Object2FloatOpenHashMap<>(payloadSimMap));
+                payloadSimMap.clear();
             }
         }
 

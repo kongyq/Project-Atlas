@@ -74,10 +74,10 @@ public class AppTest
 
     @Test
     public void mainTest() throws IOException, ParseException {
-        this.createTestIndex();
-        System.out.println("Done!!");
+//        this.createTestIndex();
+//        System.out.println("Done!!");
 //
-        System.exit(1);
+//        System.exit(1);
         IndexReader reader = DirectoryReader.open(directory);
         AtlasQueryParser queryParser = new AtlasQueryParser("text", new AtlasAnalyzer(), reader);
         Query query = queryParser.parse("dog fox");

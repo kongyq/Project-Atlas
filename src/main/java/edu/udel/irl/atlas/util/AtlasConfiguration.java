@@ -100,6 +100,8 @@ public class AtlasConfiguration {
 
     //----------Search-----------------------
 
+    public boolean expandSynset(){return this.config.getBoolean("synset.expansion");}
+
     public double getSimilarityThreshold(){return this.config.getDouble(getSynsetComparatorName() + ".synset.similarity.threshold");}
 
     public boolean isExpansionCrossPOS(){return this.config.getBoolean("synset.expansion.crossPOS");}

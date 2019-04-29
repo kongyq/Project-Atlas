@@ -25,7 +25,6 @@ import java.util.Properties;
 public class Trec7Test {
 
 
-//    private final SentenceDetectorME sentenceSplitter;
     private TrecContentSource tcs = new TrecContentSource();
     Properties props = new Properties();
     File dataDir = new File("/home/mike/Documents/corpus/Trec7");
@@ -34,7 +33,6 @@ public class Trec7Test {
 
         String sentenceDetectModel = AtlasConfiguration.getInstance().getSentenceModel();
         String modelFolder = AtlasConfiguration.getInstance().getModelFolder();
-//        this.sentenceSplitter = new SentenceDetectorME(new SentenceModel(new File(modelFolder, sentenceDetectModel)));
 
         props.setProperty("print.props", "false");
         props.setProperty("content.source.verbose", "false");
@@ -58,30 +56,28 @@ public class Trec7Test {
 
 
     public Document getNextDocument(DocData docData){
-//        System.out.println(docData.getName());
         Document document = new Document();
-        System.out.println(tcs.getConfig().get("trec.doc.parser", "!!"));
-//        System.out.println(docData.getBody());
-        if(!docData.getTitle().isEmpty()) {
-//            System.out.println(docData.getTitle());
+        if(docData.getTitle() != null) {
             document.add(new TextField("title", docData.getTitle(), Field.Store.YES));
         }
-        document.add(new TextField("text", docData.getBody(), Field.Store.NO));
+        document.add(new TextField("text", docData.getBody(), Field.Store.YES));
         document.add(new StoredField("docId", docData.getName()));
-//        document.clear();
         return document;
+    }
+
+    public void showText(DocData docData){
+        System.out.println(docData.getBody());
     }
 
     public static void main(String[] args) throws IOException {
 
         System.out.println("Start indexing!");
         long startTime = System.currentTimeMillis();
-        final Path indexDir = new File("/home/mike/Documents/Index/test").toPath();
+        final Path indexDir = new File("/home/mike/Documents/Index/Trec7").toPath();
         Directory dir = NIOFSDirectory.open(indexDir);
         IndexWriterConfig iwc = new IndexWriterConfig(new AtlasAnalyzer());
         iwc.setRAMBufferSizeMB(256d);
-        IndexWriter writer = new ThreadIndexWriter(dir, iwc, 4, 20);
-//        IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(new AtlasAnalyzer()));
+        ThreadIndexWriter writer = new ThreadIndexWriter(dir, iwc, 4, 20);
 
         Trec7Test trec7Test = new Trec7Test();
         DocData docData = new DocData();
@@ -94,12 +90,8 @@ public class Trec7Test {
 
         while (true) {
             try {
-//                DocData dd = trec7Test.getNextDoc(docData);
-//                System.out.println(dd.getName());
-//                System.out.println(dd.getBody());
-//                writer.addDocument(trec7Test.getNextDocument(dd));
+
                 writer.addDocument(trec7Test.getNextDocument(trec7Test.getNextDoc(docData)));
-//                System.out.println(docData.getName());
                 count++;
                 if (count % 1000 == 0) {
                     System.out.println("Current indexing document : " + docData.getName());
@@ -115,7 +107,7 @@ public class Trec7Test {
             }
         }
         long endTime = System.currentTimeMillis();
-        System.out.println("Indexing " + writer.numDocs() + " documents took" + (endTime - startTime) / 1000 + " second");
+        System.out.println("Indexing " + writer.numDocs() + " documents took " + (endTime - startTime) / 1000 + " second");
         writer.close();
     }
 }
