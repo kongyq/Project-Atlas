@@ -113,6 +113,19 @@ public class AtlasQueryParser{
         return new AtlasQuery(createSpanNearQuery(field, queryMap.keySet()), function, queryMap);
     }
 
+    public Query parse(String queryText, boolean isMust, boolean includeSpanScore, boolean includePayloadScore) throws IOException {
+        TokenStream tokenStream = analyzer.tokenStream(field, queryText.replaceAll("[/-]", " "));
+        atlazing(tokenStream, crossAllPOS);
+        tokenStream.close();
+
+        if(queryMap.isEmpty()) return new MatchNoDocsQuery("No similar term of the query found in the index!");
+        if(queryMap.size() == 1) return new AtlasQuery(new SpanTermQuery(queryMap.keySet().iterator().next()), function, queryMap,includeSpanScore, includePayloadScore);
+        if(isMust) {
+            return new AtlasQuery(createSpanNearQuery(field, queryMap.keySet()), function, queryMap, includeSpanScore, includePayloadScore);
+        }
+        return new AtlasQuery(createSpanOrQuery(field, queryMap.keySet()), function, queryMap, includeSpanScore, includePayloadScore);
+    }
+
     /**
      * Create a SpanOrQuery from the similar terms set.
      * @param field field name

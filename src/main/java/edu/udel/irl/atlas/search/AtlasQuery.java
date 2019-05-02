@@ -25,6 +25,7 @@ public class AtlasQuery extends SpanQuery {
     private final Map<Term, ? extends Map<BytesRef, Float>> queryMap;
     private final ScoreFunction function;
     private final boolean includeSpanScore;
+    private final boolean includePayloadScore;
 
     /**
      * Create a new AtlasQuery.
@@ -37,11 +38,17 @@ public class AtlasQuery extends SpanQuery {
      * @param includeSpanScore include both span score and Atlas score in the final score ({@code false} as default)
      */
     public AtlasQuery(SpanQuery in, ScoreFunction function, Map<Term, ? extends Map<BytesRef, Float>>  inMap, boolean includeSpanScore){
+        this(in, function, inMap, includeSpanScore, true);
+    }
+
+    public AtlasQuery(SpanQuery in, ScoreFunction function, Map<Term, ? extends Map<BytesRef, Float>> inMap, boolean includeSpanScore, boolean includePayloadScore) {
+        assert includePayloadScore || includeSpanScore : "Error: at least include either span score or payload score!";
         this.wrappedSpanQuery = in;
         this.function = function;
         this.queryMap = inMap;
         //Span score does not used as default and should be that way.
         this.includeSpanScore = includeSpanScore;
+        this.includePayloadScore = includePayloadScore;
     }
 
     /**
@@ -237,9 +244,12 @@ public class AtlasQuery extends SpanQuery {
         @Override
         protected float scoreCurrentDoc() throws IOException {
             //This may be deprecated in the future if span score is needed no more.
-            if (includeSpanScore)
-                return getSpanScore() * getPayloadScore();
+            if(includeSpanScore && includePayloadScore) return (getSpanScore()) * (1 + getPayloadScore());
+            if(includeSpanScore) return getSpanScore();
             return getPayloadScore();
+//            if (includeSpanScore)
+//                return getSpanScore() * (1 + getPayloadScore());
+//            return getPayloadScore();
         }
     }
 }

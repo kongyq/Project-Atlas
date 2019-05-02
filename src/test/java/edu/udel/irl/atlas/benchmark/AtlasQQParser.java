@@ -42,7 +42,11 @@ public class AtlasQQParser implements QualityQueryParser {
         BooleanQuery.Builder bq = new BooleanQuery.Builder();
         for (String qqName : qqNames) {
             try {
-                bq.add(aqp.parse(qq.getValue(qqName)), BooleanClause.Occur.SHOULD);
+                if(qqName.equals("title")) {
+                    bq.add(aqp.parse(qq.getValue(qqName),true, false, true), BooleanClause.Occur.MUST);
+                }else{
+                    bq.add(aqp.parse(qq.getValue(qqName), false, false,true), BooleanClause.Occur.SHOULD);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

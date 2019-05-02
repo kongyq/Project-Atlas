@@ -24,6 +24,8 @@ public abstract class ParserOp {
 
         public abstract void parseSent(String[] sentence);
 
+        public abstract void parseSent(String[] sentence, String[] postags);
+
         public abstract List<byte[]> getCodeList();
 
         public abstract List<byte[]> getCodeList(short sentNum);

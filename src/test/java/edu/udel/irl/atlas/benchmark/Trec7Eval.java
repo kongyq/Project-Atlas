@@ -18,7 +18,8 @@ public class Trec7Eval {
 
     private final File topicFile = new File("/home/mike/Documents/runs/topics.trec7.351-400");
     private final File qrelFile = new File("/home/mike/Documents/runs/qrels.trec7.351-400");
-    private final Path indexPath = new File("/home/mike/Documents/Index/Trec7").toPath();
+//    private final Path indexPath = new File("/home/mike/Documents/Index/Trec7").toPath();
+    private final Path indexPath = new File("/home/mike/Documents/Index/Trec7Legacy").toPath();
     private final Directory directory = NIOFSDirectory.open(indexPath);
     private final IndexReader reader = DirectoryReader.open(directory);
     private final IndexSearcher searcher = new IndexSearcher(reader);
@@ -41,7 +42,10 @@ public class Trec7Eval {
 
         judge.validateData(qqs, LOGGER);
 
-        QualityQueryParser qqParser = new AtlasQQParser("title", docBodyField, reader);
+//        QualityQueryParser qqParser = new AtlasQQParser(new String[]{"title","description"}, docBodyField, reader);
+//        QualityQueryParser qqParser = new AtlasQQParser("title", docBodyField, reader);
+//        QualityQueryParser qqParser = new SimpleQQParser("title", docBodyField);
+        QualityQueryParser qqParser = new SimpleQQParser(new String[]{"title", "description", "narrative"}, docBodyField);
 
         QualityBenchmark qrun = new QualityBenchmark(qqs, qqParser, searcher, docNameField);
 

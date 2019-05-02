@@ -76,6 +76,12 @@ public class AtlasConfiguration {
 
     public String getSentenceModel(){return this.config.getString("sentenceDetector.model");}
 
+    public String getPOSTaggerModel(){return this.config.getString("postagger.model");}
+
+    public String getChunkerName(){return this.config.getString("chunker.name");}
+
+    public String getChunkerModel(){return this.config.getString(this.getChunkerName() + ".chunker.model");}
+
     public String getParserName(){return this.config.getString("parser.name") + "ParserOp";}
 
     public String getParserModel(){return this.config.getString(this.config.getString("parser.name") + ".parser.model");}

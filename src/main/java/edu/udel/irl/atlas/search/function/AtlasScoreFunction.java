@@ -23,13 +23,13 @@ public class AtlasScoreFunction extends ScoreFunction{
         for(int i = 0; i < bars.size()-1; i ++){
             AtlasBar bar1 = bars.get(i);
             AtlasBar bar2 = bars.get(i + 1);
-            if(bar1.queryheader == bar2.queryheader && bar1.docheader == bar2.docheader) {
+//            if(bar1.queryheader == bar2.queryheader && bar1.docheader == bar2.docheader) {
                 String sentKey = Short.toUnsignedInt(bar1.queryheader) + "<->" + Short.toUnsignedInt(bar1.docheader);
                 sentPairs.putIfAbsent(sentKey, new ArrayList<>());
                 Explanation cycle = cycleScore(bar1, bar2);
                 sentPairs.get(sentKey).add(cycle);
                 finalScore += cycle.getValue();
-            }
+//            }
         }
         return finalScore;
     }

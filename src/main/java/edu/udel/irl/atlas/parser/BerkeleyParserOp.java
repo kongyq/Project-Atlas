@@ -74,6 +74,13 @@ public class BerkeleyParserOp extends ParserOp{
         }
 
         @Override
+        public void parseSent(String[] sentence, String[] postags) {
+            this.parse = TreeAnnotations.unAnnotateTree(
+                    parser.getBestConstrainedParse(Arrays.asList(sentence), Arrays.asList(postags)),
+                    false);
+        }
+
+        @Override
         public List<byte[]> getCodeList() {
             return ParsePayloadEncoder.encode(parse);
         }

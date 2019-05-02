@@ -27,7 +27,7 @@ public class Trec7Test {
 
     private TrecContentSource tcs = new TrecContentSource();
     Properties props = new Properties();
-    File dataDir = new File("/home/mike/Documents/corpus/Trec7");
+    File dataDir = new File("/home/mike/Documents/corpus/TrecData");
 
     public Trec7Test() throws IOException {
 
@@ -73,9 +73,10 @@ public class Trec7Test {
 
         System.out.println("Start indexing!");
         long startTime = System.currentTimeMillis();
-        final Path indexDir = new File("/home/mike/Documents/Index/Trec7").toPath();
+        final Path indexDir = new File("/home/mike/Documents/Index/Trec7Legacy").toPath();
         Directory dir = NIOFSDirectory.open(indexDir);
-        IndexWriterConfig iwc = new IndexWriterConfig(new AtlasAnalyzer());
+//        IndexWriterConfig iwc = new IndexWriterConfig(new AtlasAnalyzer());
+        IndexWriterConfig iwc = new IndexWriterConfig();    //StandardAnalyzer
         iwc.setRAMBufferSizeMB(256d);
         ThreadIndexWriter writer = new ThreadIndexWriter(dir, iwc, 4, 20);
 
